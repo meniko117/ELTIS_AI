@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 import nest_asyncio
 nest_asyncio.apply()
 
@@ -10,11 +12,14 @@ import time
 import anthropic
 import graphviz
 
-# API tokens (replace with your actual tokens)
-TELEGRAM_TOKEN = 'token'
-ASSEMBLYAI_API_KEY = "api_key"
-CLAUDE_API_KEY = "claude_api"
-DOWNLOAD_PATH = './downloads/'
+# Load environment variables from .env file
+load_dotenv()
+
+# API tokens (now loaded from environment variables)
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+ASSEMBLYAI_API_KEY = os.getenv('ASSEMBLYAI_API_KEY')
+CLAUDE_API_KEY = os.getenv('CLAUDE_API_KEY')
+DOWNLOAD_PATH = os.getenv('DOWNLOAD_PATH', './downloads/')
 
 # Ensure the download directory exists
 if not os.path.exists(DOWNLOAD_PATH):

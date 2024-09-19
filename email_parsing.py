@@ -6,10 +6,11 @@ import re
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import json
+import pandas as pd
 
 # Establish connection to the email server
 url = "mx.eltis.com"
-user, password = (user, password)
+user, password = ("ELTIS\\smirnov","Qazqwe11")
 
 try:
     conn = imaplib.IMAP4_SSL(url, 993)
@@ -116,7 +117,7 @@ conn.logout()
 
 
 
-
+ 
 
 # def convert_unicode_escape(obj):
 #     if isinstance(obj, str):
@@ -144,7 +145,7 @@ formatted_date = date.today().strftime("%d_%m_%Y")
 file_path = fr'C:\Users\134\Documents\ЭЛТИС\Почта\почта_20_сообщений_inbox_{formatted_date}.json'
 
 #  date to compare with
-given_date = datetime(2024, 8, 28, 0, 0, 0)  #- timedelta(days=3)
+given_date = datetime(2024, 8, 29, 0, 0, 0)  #- timedelta(days=3)
 
 # Filter the emails dictionary
 filtered_emails = {key: value for key, value in emails.items() if datetime.strptime(value['date'], '%Y-%m-%d %H:%M:%S') >= given_date}

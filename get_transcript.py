@@ -1,43 +1,53 @@
+import os
+from dotenv import load_dotenv
 import requests
 import time
 from pydub import AudioSegment
-import os
-from datetime import date
+from datetime import date, datetime
+import re
 
-# Check the status
-#https://www.assemblyai.com/app/processing-queue 
+# Load environment variables from .env file
+load_dotenv()
 
 # Your AssemblyAI API key
-api_key = api_key
+api_key = os.getenv('ASSEMBLYAI_API_KEY')
 
 # Endpoint for uploading files
 upload_url = 'https://api.assemblyai.com/v2/upload'
 
-# Path to your local audio file
-#audio_file_path = "C:\\Users\\134\\Downloads\\Элтис-Закрытие-месяцев-23.08.24-14-02-36-—-запись.mp3"
-
-
-
-
 # Specify the folder path
-folder_path = "C:\\Users\\134\\Documents\\Телемост\\"
+folder_path = os.getenv('FOLDER_PATH')
 
 # Get the list of files
-file = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))][0]
+files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+
+# Function to extract the date from the filename
+def extract_date(filename):
+    # Match the date format like "10.09.24" in the filename
+    match = re.search(r'(\d{2})\.(\d{2})\.(\d{2})', filename)
+    if match:
+        day, month, year = match.groups()
+        # Convert the extracted date to a datetime object
+        return datetime.strptime(f'{day}.{month}.{year}', '%d.%m.%y')
+    return None
+
+# Sort the files by the extracted date
+files_with_dates = [(file, extract_date(file)) for file in files if extract_date(file)]
+latest_file = max(files_with_dates, key=lambda x: x[1])[0]  # Get the file with the latest date
 
 try:
     # Load the .webm audio file
-    audio = AudioSegment.from_file("C:\\Users\\134\\Documents\\Телемост\\" + file, format="webm")
+    audio = AudioSegment.from_file(os.path.join(folder_path, latest_file), format="webm")
     
     # Export as .mp3
-    audio.export("C:\\Users\\134\\Documents\\ЭЛТИС\\Онлайн совещания\\output.mp3", format="mp3")
+    audio.export(os.path.join(os.getenv('OUTPUT_FOLDER'), "output.mp3"), format="mp3")
     
 
 finally:
     # Explicitly delete the audio object to free up resources
     del audio
 
-audio_file_path ="C:\\Users\\134\\Documents\\ЭЛТИС\\Онлайн совещания\\output.mp3"
+audio_file_path = os.path.join(os.getenv('OUTPUT_FOLDER'), "output.mp3")
 
 # Upload the file
 def upload_file(file_path):
@@ -106,7 +116,7 @@ def main():
         formatted_date = date.today().strftime("%d_%m_%Y")
         
         # Define the file path and content
-        file_path = fr"C:\\Users\\134\\Documents\\ЭЛТИС\\Онлайн совещания\\транскрипт_совещания_{formatted_date}.txt"
+        file_path = os.path.join(os.getenv('TRANSCRIPT_FOLDER'), f"транскрипт_совещания_{formatted_date}.txt")
 
         # Open the file in write mode and save the content
         with open(file_path, 'w', encoding='utf-8') as file:
