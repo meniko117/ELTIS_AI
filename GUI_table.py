@@ -174,6 +174,7 @@ class IndexApp(QWidget):
         self.source_files_path = ""
         self.db_index_path = ""
         self.markdown_files_path = ""
+        self.extra_path = ""
 
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -226,62 +227,137 @@ class IndexApp(QWidget):
         label_font = QFont("Arial", 16)
         self.label.setFont(label_font)
         top_layout.addWidget(self.label)
+        
+        # Add vertical spacing (3 times the original)
+        top_layout.addSpacing(60)  # Assuming original spacing was 20, now it's 60
 
-        # Create left_layout
-        left_layout = QVBoxLayout()
-        left_layout.setAlignment(Qt.AlignLeft)  # Align to the left
+        # Create a horizontal layout for input, output, and markdown fields
+        input_output_markdown_layout = QHBoxLayout()
+
+        # Input and Markdown Folder Layout
+        input_markdown_layout = QVBoxLayout()
+
+         # Read paths from paths.txt
+        current_dir = os.getcwd()
+        paths_file = os.path.join(current_dir, 'paths.txt')
+        paths = {}
+        if os.path.exists(paths_file):
+            try:
+                with open(paths_file, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        try:
+                            key, value = line.strip().split(': ', 1)
+                            paths[key] = value
+                        except ValueError:
+                            # Skip lines that don't have the expected format
+                            continue
+            except UnicodeDecodeError:
+                # If UTF-8 fails, try with 'cp1251' encoding (Windows Cyrillic)
+                with open(paths_file, 'r', encoding='cp1251') as f:
+                    for line in f:
+                        try:
+                            key, value = line.strip().split(': ', 1)
+                            paths[key] = value
+                        except ValueError:
+                            # Skip lines that don't have the expected format
+                            continue
+
+        # Sample descriptions for each field
+        input_description = QLabel("Папка с исходными файлами")
+        input_description.setFont(QFont("Arial", 12))
+        markdown_description = QLabel("Папка с Markdown файлами")
+        markdown_description.setFont(QFont("Arial", 12))
+        output_description = QLabel("Папка для базы данных с индексом")
+        output_description.setFont(QFont("Arial", 12))
+        extra_description = QLabel("Дополнительная папка")
+        extra_description.setFont(QFont("Arial", 12))
 
         # Input Folder
-        input_layout = QHBoxLayout()
+        input_layout = QVBoxLayout()
+        input_layout.addWidget(input_description)
+        input_field_layout = QHBoxLayout()
         self.input_field = QLineEdit()
-        self.input_field.setPlaceholderText("Путь к папке с исходными файлами")
+        self.input_field.setPlaceholderText(paths.get('Source Files Folder', ''))
         self.input_field.setFixedHeight(40)
         self.input_field.setFixedWidth(400)  # Set width to 400 pixels
         self.input_field.setFont(QFont("Arial", 12))
         self.input_field.textChanged.connect(self.update_source_files_path)
-        input_layout.addWidget(self.input_field)
+        input_field_layout.addWidget(self.input_field)
         self.browse_button = QPushButton("Найти")
         self.browse_button.setFixedSize(80, 40)
         self.browse_button.setFont(QFont("Arial", 12))
         self.browse_button.clicked.connect(self.browse_folder)
-        input_layout.addWidget(self.browse_button)
-        left_layout.addLayout(input_layout)
-
-        # Output Folder
-        output_layout = QHBoxLayout()
-        self.output_field = QLineEdit()
-        self.output_field.setPlaceholderText("Путь к папке к БД с индексом")
-        self.output_field.setFixedHeight(40)
-        self.output_field.setFixedWidth(400)  # Set width to 400 pixels
-        self.output_field.setFont(QFont("Arial", 12))
-        self.output_field.textChanged.connect(self.update_db_index_path)
-        output_layout.addWidget(self.output_field)
-        self.browse_output_button = QPushButton("Найти")
-        self.browse_output_button.setFixedSize(80, 40)
-        self.browse_output_button.setFont(QFont("Arial", 12))
-        self.browse_output_button.clicked.connect(self.browse_output_folder)
-        output_layout.addWidget(self.browse_output_button)
-        left_layout.addLayout(output_layout)
+        input_field_layout.addWidget(self.browse_button)
+        input_layout.addLayout(input_field_layout)
+        input_markdown_layout.addLayout(input_layout)
 
         # Markdown Folder
-        markdown_layout = QHBoxLayout()
+        markdown_layout = QVBoxLayout()
+        markdown_layout.addWidget(markdown_description)
+        markdown_field_layout = QHBoxLayout()
         self.markdown_field = QLineEdit()
-        self.markdown_field.setPlaceholderText("Путь к папке с markdown файлами")
+        self.markdown_field.setPlaceholderText(paths.get('Markdown Folder', ''))
         self.markdown_field.setFixedHeight(40)
         self.markdown_field.setFixedWidth(400)  # Set width to 400 pixels
         self.markdown_field.setFont(QFont("Arial", 12))
         self.markdown_field.textChanged.connect(self.update_markdown_files_path)
-        markdown_layout.addWidget(self.markdown_field)
+        markdown_field_layout.addWidget(self.markdown_field)
         self.browse_markdown_button = QPushButton("Найти")
         self.browse_markdown_button.setFixedSize(80, 40)
         self.browse_markdown_button.setFont(QFont("Arial", 12))
         self.browse_markdown_button.clicked.connect(self.browse_markdown_folder)
-        markdown_layout.addWidget(self.browse_markdown_button)
-        left_layout.addLayout(markdown_layout)
+        markdown_field_layout.addWidget(self.browse_markdown_button)
+        markdown_layout.addLayout(markdown_field_layout)
+        input_markdown_layout.addLayout(markdown_layout)
 
-        # Add left_layout to top_layout
-        top_layout.addLayout(left_layout)
+        input_output_markdown_layout.addLayout(input_markdown_layout)
 
+        # Output and Extra Field Layout
+        output_extra_layout = QVBoxLayout()
+
+        # Output Folder
+        output_layout = QVBoxLayout()
+        output_layout.addWidget(output_description)
+        output_field_layout = QHBoxLayout()
+        self.output_field = QLineEdit()
+        self.output_field.setPlaceholderText(paths.get('Output Folder', ''))
+        self.output_field.setFixedHeight(40)
+        self.output_field.setFixedWidth(400)  # Set width to 400 pixels
+        self.output_field.setFont(QFont("Arial", 12))
+        self.output_field.textChanged.connect(self.update_db_index_path)
+        output_field_layout.addWidget(self.output_field)
+        self.browse_output_button = QPushButton("Найти")
+        self.browse_output_button.setFixedSize(80, 40)
+        self.browse_output_button.setFont(QFont("Arial", 12))
+        self.browse_output_button.clicked.connect(self.browse_output_folder)
+        output_field_layout.addWidget(self.browse_output_button)
+        output_layout.addLayout(output_field_layout)
+        output_extra_layout.addLayout(output_layout)
+
+        # Extra Field
+        extra_layout = QVBoxLayout()
+        extra_layout.addWidget(extra_description)
+        extra_field_layout = QHBoxLayout()
+        self.extra_field = QLineEdit()
+        self.extra_field.setPlaceholderText(paths.get('Extra Path', ''))
+        self.extra_field.setFixedHeight(40)
+        self.extra_field.setFixedWidth(400)  # Set width to 400 pixels
+        self.extra_field.setFont(QFont("Arial", 12))
+        self.extra_field.textChanged.connect(self.update_extra_path)
+        extra_field_layout.addWidget(self.extra_field)
+        self.extra_button = QPushButton("Найти")
+        self.extra_button.setFixedSize(80, 40)
+        self.extra_button.setFont(QFont("Arial", 12))
+        self.extra_button.clicked.connect(self.browse_extra_folder)
+        extra_field_layout.addWidget(self.extra_button)
+        extra_layout.addLayout(extra_field_layout)
+        output_extra_layout.addLayout(extra_layout)
+
+        input_output_markdown_layout.addLayout(output_extra_layout)
+
+        # Add input_output_markdown_layout to top_layout
+        top_layout.addLayout(input_output_markdown_layout)
+        
         # Create Index Button
         self.create_button = QPushButton("Создать Индекс")
         self.create_button.setFixedSize(200, 60)  # Set width to 200 and height to 60
@@ -300,9 +376,12 @@ class IndexApp(QWidget):
         self.create_button.clicked.connect(self.run_script)
         top_layout.addWidget(self.create_button)
 
+        # Add vertical spacing (3 times the original)
+        top_layout.addSpacing(60)  # Assuming original spacing was 20, now it's 60
+
         # Add a button to save left_field content
-        self.save_left_field_button = QPushButton("Сохранить вопрос")
-        self.save_left_field_button.setFixedSize(200, 60)  # Match the size of create_button
+        self.save_left_field_button = QPushButton("Отправить вопрос в модель")
+        self.save_left_field_button.setFixedSize(300, 60)  # Match the size of create_button
         self.save_left_field_button.setFont(QFont("Arial", 16))
         self.save_left_field_button.setStyleSheet("""
             QPushButton {
@@ -317,6 +396,7 @@ class IndexApp(QWidget):
         """)
         self.save_left_field_button.clicked.connect(self.save_left_field_content)
         top_layout.addWidget(self.save_left_field_button)
+
 
         # Start of Selection
         # Add the top_layout to home_layout
@@ -544,8 +624,10 @@ class IndexApp(QWidget):
             QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить вопрос: {str(e)}")                    
 
     def run_script(self):
-        input_folder = self.source_files_folder
+        input_folder = self.input_field.text()
         output_folder = self.output_field.text()
+        markdown_folder = self.markdown_field.text()
+        extra_path = self.extra_field.text()
 
         if not input_folder or not output_folder:
             QMessageBox.warning(self, "Input Error", "Please select both input and output folders.")
@@ -556,10 +638,12 @@ class IndexApp(QWidget):
             current_dir = os.getcwd()
             paths_file = os.path.join(current_dir, 'paths.txt')
             
-            # Save the source_files_folder path to paths.txt
+            # Save all field values to paths.txt
             with open(paths_file, 'w', encoding='utf-8') as f:
                 f.write(f"Source Files Folder: {input_folder}\n")
                 f.write(f"Output Folder: {output_folder}\n")
+                f.write(f"Markdown Folder: {markdown_folder}\n")
+                f.write(f"Extra Path: {extra_path}\n")
 
             # Verify that the file was created
             if os.path.exists(paths_file):
@@ -572,7 +656,9 @@ class IndexApp(QWidget):
             subprocess.run([
                 'python', r"C:\Users\134\Documents\Python Scripts\test_script_for_gui_button.py",
                 '--input_folder', input_folder,
-                '--output_folder', output_folder
+                '--output_folder', output_folder,
+                '--markdown_folder', markdown_folder,
+                '--extra_path', extra_path
             ], check=True)
             QMessageBox.information(self, "Success", "Index creation completed.")
         except IOError as e:
@@ -618,6 +704,15 @@ class IndexApp(QWidget):
             QMessageBox.information(self, "Отлично!", "Excel файл загружен")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to upload Excel file:\n{str(e)}")
+
+    def update_extra_path(self, text):
+        self.extra_path = text
+
+    def browse_extra_folder(self):
+        folder_path = QFileDialog.getExistingDirectory(self, "Выбрать папку для метаданных")
+        if folder_path:
+            self.extra_field.setText(folder_path)
+            self.extra_path = folder_path
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
