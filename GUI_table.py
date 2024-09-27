@@ -4,13 +4,14 @@ import pandas as pd
 from PySide6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout,
     QFileDialog, QMessageBox, QHBoxLayout, QFrame, QStackedWidget,
-    QComboBox, QMenuBar, QMenu, QTableWidget, QTableWidgetItem, QHeaderView, QTextEdit 
+    QComboBox, QMenuBar, QMenu, QTableWidget, QTableWidgetItem, QHeaderView, QTextEdit, QGroupBox, QSlider, QGridLayout 
 )
 from PySide6.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve
 from PySide6.QtGui import QIcon, QColor, QFont, QAction
 from PySide6.QtWidgets import QSizePolicy
 
 import subprocess
+
 
 class Sidebar(QFrame):
     def __init__(self, parent=None):
@@ -70,7 +71,7 @@ class Sidebar(QFrame):
         self.btn_about.setIconSize(QSize(24, 24))
         self.button_layout.addWidget(self.btn_about)
 
-        self.btn_see_table = QPushButton("Посмотреть таблицу")
+        self.btn_see_table = QPushButton("История запросов")
         self.btn_see_table.setStyleSheet(button_style())
         self.btn_see_table.setIcon(QIcon.fromTheme("insert-table"))
         self.btn_see_table.setIconSize(QSize(24, 24))
@@ -122,6 +123,7 @@ class Sidebar(QFrame):
         self.btn_see_table.setText("Посмотреть таблицу")
         self.btn_see_table.setToolTip("")  # Fixed: Added empty string as argument
 
+
 def button_style():
     return """
         QPushButton {
@@ -137,6 +139,7 @@ def button_style():
             background-color: #2c3e50;
         }
     """
+
 
 class Header(QFrame):
     def __init__(self, parent=None):
@@ -163,6 +166,7 @@ class Header(QFrame):
 
         self.setLayout(layout)
 
+
 class IndexApp(QWidget):
     def __init__(self):
         super().__init__()
@@ -175,6 +179,10 @@ class IndexApp(QWidget):
         self.db_index_path = ""
         self.markdown_files_path = ""
         self.extra_path = ""
+        self.chunk_size = ""
+        self.overlap = ""
+        self.left_text = ""
+        self.right_text = ""
 
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -215,10 +223,64 @@ class IndexApp(QWidget):
         self.home_page = QWidget()
         home_layout = QVBoxLayout()
 
-        # Start of Selection
-        # Reorganized elements to be at the top of the page
+        # Add only save_left_field_button, left_field, right_field to home_layout
 
-        # Create a top-aligned layout for the selection elements
+        # Add a button to save left_field content
+        self.save_left_field_button = QPushButton("Отправить вопрос в модель")
+        self.save_left_field_button.setFixedSize(300, 60)  # Match the size of create_button
+        self.save_left_field_button.setFont(QFont("Arial", 16))
+        self.save_left_field_button.setStyleSheet("""
+            QPushButton {
+                background-color: #2ecc71;
+                color: white;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #27ae60;
+            }
+        """)
+        self.save_left_field_button.clicked.connect(self.save_left_field_content)
+        home_layout.addWidget(self.save_left_field_button, alignment=Qt.AlignTop | Qt.AlignHCenter)
+
+        # Two QTextEdits: left_field and right_field
+        fields_layout = QHBoxLayout()
+        
+        self.left_field = QTextEdit()
+        self.left_field.setPlaceholderText("Введите вопрос")
+        self.left_field.setFont(QFont("Arial", 12))
+        self.left_field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.left_field.setStyleSheet("border: 1px solid #A0A0A0;")  # Darker border
+        fields_layout.addWidget(self.left_field)
+        self.left_text = ""
+        
+        self.right_field = QTextEdit()
+        self.right_field.setPlaceholderText("Ответ модели")
+        self.right_field.setFont(QFont("Arial", 12))
+        self.right_field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.right_field.setStyleSheet("border: 1px solid #A0A0A0;")  # Darker border
+        fields_layout.addWidget(self.right_field)
+        self.right_text = ""
+        
+        # Connect text changed signals to update variables
+        self.left_field.textChanged.connect(self.update_left_text)
+        self.right_field.textChanged.connect(self.update_right_text)
+
+        home_layout.addLayout(fields_layout)
+
+        # Set the stretch factor for the fields_layout to make it occupy remaining space
+        home_layout.setStretchFactor(fields_layout, 1)
+
+        self.home_page.setLayout(home_layout)
+        self.stacked_widget.addWidget(self.home_page)
+
+        # Settings Page
+        self.settings_page = QWidget()
+        settings_layout = QVBoxLayout()
+
+        # Moved elements from Home to Settings
+
+        # Top-aligned layout for the selection elements
         top_layout = QVBoxLayout()
         top_layout.setAlignment(Qt.AlignTop)
 
@@ -237,7 +299,7 @@ class IndexApp(QWidget):
         # Input and Markdown Folder Layout
         input_markdown_layout = QVBoxLayout()
 
-         # Read paths from paths.txt
+        # Read paths from paths.txt
         current_dir = os.getcwd()
         paths_file = os.path.join(current_dir, 'paths.txt')
         paths = {}
@@ -269,7 +331,7 @@ class IndexApp(QWidget):
         markdown_description.setFont(QFont("Arial", 12))
         output_description = QLabel("Папка для базы данных с индексом")
         output_description.setFont(QFont("Arial", 12))
-        extra_description = QLabel("Дополнительная папка")
+        extra_description = QLabel("Путь к метасправочнику")
         extra_description.setFont(QFont("Arial", 12))
 
         # Input Folder
@@ -277,7 +339,7 @@ class IndexApp(QWidget):
         input_layout.addWidget(input_description)
         input_field_layout = QHBoxLayout()
         self.input_field = QLineEdit()
-        self.input_field.setPlaceholderText(paths.get('Source Files Folder', ''))
+        self.input_field.setText(paths.get('Source Files Folder', ''))
         self.input_field.setFixedHeight(40)
         self.input_field.setFixedWidth(400)  # Set width to 400 pixels
         self.input_field.setFont(QFont("Arial", 12))
@@ -296,7 +358,7 @@ class IndexApp(QWidget):
         markdown_layout.addWidget(markdown_description)
         markdown_field_layout = QHBoxLayout()
         self.markdown_field = QLineEdit()
-        self.markdown_field.setPlaceholderText(paths.get('Markdown Folder', ''))
+        self.markdown_field.setText(paths.get('Markdown Folder', ''))
         self.markdown_field.setFixedHeight(40)
         self.markdown_field.setFixedWidth(400)  # Set width to 400 pixels
         self.markdown_field.setFont(QFont("Arial", 12))
@@ -320,7 +382,7 @@ class IndexApp(QWidget):
         output_layout.addWidget(output_description)
         output_field_layout = QHBoxLayout()
         self.output_field = QLineEdit()
-        self.output_field.setPlaceholderText(paths.get('Output Folder', ''))
+        self.output_field.setText(paths.get('Output Folder', ''))
         self.output_field.setFixedHeight(40)
         self.output_field.setFixedWidth(400)  # Set width to 400 pixels
         self.output_field.setFont(QFont("Arial", 12))
@@ -339,7 +401,7 @@ class IndexApp(QWidget):
         extra_layout.addWidget(extra_description)
         extra_field_layout = QHBoxLayout()
         self.extra_field = QLineEdit()
-        self.extra_field.setPlaceholderText(paths.get('Extra Path', ''))
+        self.extra_field.setText(paths.get('Extra Path', ''))
         self.extra_field.setFixedHeight(40)
         self.extra_field.setFixedWidth(400)  # Set width to 400 pixels
         self.extra_field.setFont(QFont("Arial", 12))
@@ -358,10 +420,105 @@ class IndexApp(QWidget):
         # Add input_output_markdown_layout to top_layout
         top_layout.addLayout(input_output_markdown_layout)
         
-        # Create Index Button
-        self.create_button = QPushButton("Создать Индекс")
-        self.create_button.setFixedSize(200, 60)  # Set width to 200 and height to 60
-        self.create_button.setFont(QFont("Arial", 16))
+        # Create a new layout for the additional fields
+        additional_fields_layout = QVBoxLayout()
+
+        # Create a QGroupBox for the additional fields
+        additional_fields_group = QGroupBox()
+        additional_fields_group.setStyleSheet("""
+            QGroupBox {
+                border: 1px solid #cccccc;
+                border-radius: 5px;
+                margin-top: 10px;
+            }
+        """)
+        additional_fields_layout = QVBoxLayout(additional_fields_group)
+
+        # Start of Selection
+        # Start of Selection
+        # Text chunk size field with QSlider and labels
+        # Text chunk size field with QSlider and labels
+        chunk_size_layout = QVBoxLayout()
+        chunk_size_description = QLabel("размер части текста")
+        chunk_size_description.setFont(QFont("Arial", 12))
+        chunk_size_layout.addWidget(chunk_size_description)
+        
+        # Initialize the QSlider for chunk size
+        self.chunk_size_slider = QSlider(Qt.Horizontal)
+        self.chunk_size_slider.setRange(500, 5000)  # Set range from 500 to 5000
+        self.chunk_size_slider.setSingleStep(500)    # Step of 500
+        self.chunk_size_slider.setTickInterval(500)
+        self.chunk_size_slider.setTickPosition(QSlider.TicksBelow)
+        self.chunk_size_slider.setValue(int(paths.get('Chunk Size', 500)))  # Default value
+        self.chunk_size_slider.valueChanged.connect(self.update_chunk_size)
+        self.chunk_size_slider.setToolTip("Adjust the chunk size of the text")
+        chunk_size_layout.addWidget(self.chunk_size_slider)
+        
+        # Define and add chunk size labels below the slider
+        chunk_size_values = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+        chunk_size_labels_layout = QHBoxLayout()
+        
+        for value in chunk_size_values:
+            label = QLabel(str(value))
+            label.setFont(QFont("Arial", 10))
+            label.setAlignment(Qt.AlignCenter)
+            chunk_size_labels_layout.addWidget(label)
+        chunk_size_layout.addLayout(chunk_size_labels_layout)
+        
+        additional_fields_layout.addLayout(chunk_size_layout)
+
+        # Text overlap field with QSlider and labels
+        overlap_layout = QVBoxLayout()
+        overlap_description = QLabel("перекрытие текста")
+        overlap_description.setFont(QFont("Arial", 12))
+        overlap_layout.addWidget(overlap_description)
+        
+        # Initialize the QSlider for text overlap
+        self.overlap_slider = QSlider(Qt.Horizontal)
+        self.overlap_slider.setRange(10, 50)    # Set range from 10 to 50
+        self.overlap_slider.setSingleStep(10)   # Step of 10
+        self.overlap_slider.setTickInterval(10)
+        self.overlap_slider.setTickPosition(QSlider.TicksBelow)
+        self.overlap_slider.setValue(int(paths.get('Text Overlap', 10)))  # Default value
+        self.overlap_slider.valueChanged.connect(self.update_overlap)
+        self.overlap_slider.setToolTip("Adjust the text overlap percentage")
+        overlap_layout.addWidget(self.overlap_slider)
+        
+        # Define and add overlap labels below the slider
+        overlap_values = [10, 20, 30, 40, 50]
+        overlap_labels_layout = QHBoxLayout()
+        
+        for value in overlap_values:
+            label = QLabel(str(value))
+            label.setFont(QFont("Arial", 10))
+            label.setAlignment(Qt.AlignCenter)
+            overlap_labels_layout.addWidget(label)
+        overlap_layout.addLayout(overlap_labels_layout)
+        
+        additional_fields_layout.addLayout(overlap_layout)
+
+        # LLM Model selection dropdown
+        model_layout = QVBoxLayout()
+        model_description = QLabel("Выберите LLM модель")
+        model_description.setFont(QFont("Arial", 12))
+        model_layout.addWidget(model_description)
+        self.model_dropdown = QComboBox()
+        self.model_dropdown.addItems(["Claude Sonnet", "Claude Haiku", "Gigachat Sber", "Yandex GPT"])
+        self.model_dropdown.setCurrentText("Claude Sonnet")
+        self.model_dropdown.setFixedHeight(40)
+        self.model_dropdown.setFixedWidth(200)
+        self.model_dropdown.setFont(QFont("Arial", 12))
+        model_layout.addWidget(self.model_dropdown)
+        additional_fields_layout.addLayout(model_layout)
+
+        # Add the QGroupBox to the input_output_markdown_layout
+        input_output_markdown_layout.addWidget(additional_fields_group)
+
+        
+        # Create Index Button (Moved to Settings Page)
+        self.create_button = QPushButton("Сохранить конфигурационный файл")
+        self.create_button.setFixedSize(300, 60)  # Set width to 200 and height to 60
+        self.create_button.setFont(QFont("Arial", 12))
         self.create_button.setStyleSheet("""
             QPushButton {
                 background-color: #27ae60;
@@ -379,69 +536,8 @@ class IndexApp(QWidget):
         # Add vertical spacing (3 times the original)
         top_layout.addSpacing(60)  # Assuming original spacing was 20, now it's 60
 
-        # Add a button to save left_field content
-        self.save_left_field_button = QPushButton("Отправить вопрос в модель")
-        self.save_left_field_button.setFixedSize(300, 60)  # Match the size of create_button
-        self.save_left_field_button.setFont(QFont("Arial", 16))
-        self.save_left_field_button.setStyleSheet("""
-            QPushButton {
-                background-color: #2ecc71;
-                color: white;
-                border: none;
-                border-radius: 5px;
-            }
-            QPushButton:hover {
-                background-color: #27ae60;
-            }
-        """)
-        self.save_left_field_button.clicked.connect(self.save_left_field_content)
-        top_layout.addWidget(self.save_left_field_button)
+        settings_layout.addLayout(top_layout)
 
-
-        # Start of Selection
-        # Add the top_layout to home_layout
-        home_layout.addLayout(top_layout)
-
-        # Add two empty fields in one row with maximum height
-        fields_layout = QHBoxLayout()
-        
-        self.left_field = QTextEdit()
-        self.left_field.setPlaceholderText("Введите вопрос")
-        self.left_field.setFont(QFont("Arial", 12))
-        self.left_field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.left_field.setStyleSheet("border: 1px solid #A0A0A0;")  # Darker border
-        fields_layout.addWidget(self.left_field)
-        self.left_text = ""
-        
-        self.right_field = QTextEdit()
-        self.right_field.setPlaceholderText("Ответ модели")
-        self.right_field.setFont(QFont("Arial", 12))
-        self.right_field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.right_field.setStyleSheet("border: 1px solid #A0A0A0;")  # Darker border
-        fields_layout.addWidget(self.right_field)
-        self.right_text = ""
-        
-        # Connect text changed signals to update variables
-        self.left_field.textChanged.connect(self.update_left_text)
-        self.right_field.textChanged.connect(self.update_right_text)
-
-        
-        # Add the fields_layout to home_layout
-        home_layout.addLayout(fields_layout)
-
-        # Set the stretch factor for the fields_layout to make it occupy remaining space
-        home_layout.setStretchFactor(fields_layout, 1)
-
-
-        self.home_page.setLayout(home_layout)
-        self.stacked_widget.addWidget(self.home_page)
-
-        # Settings Page
-        self.settings_page = QWidget()
-        settings_layout = QVBoxLayout()
-        settings_label = QLabel("Настройки")
-        settings_label.setFont(QFont("Arial", 16))
-        settings_layout.addWidget(settings_label)
         self.settings_page.setLayout(settings_layout)
         self.stacked_widget.addWidget(self.settings_page)
 
@@ -550,27 +646,27 @@ class IndexApp(QWidget):
         self.sidebar.btn_about.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.about_page))
         self.sidebar.btn_see_table.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.see_table_page))
 
-        # Add these new methods
     def update_left_text(self):
         self.left_text = self.left_field.toPlainText()
 
     def update_right_text(self):
         self.right_text = self.right_field.toPlainText()
+
     # Add this method to update the variable when text changes
-    def update_source_files_folder(self, text):
-        self.source_files_folder = text
+    def update_source_files_path(self, text):
+        self.source_files_path = text
 
     def browse_folder(self):
         folder_path = QFileDialog.getExistingDirectory(self, "Выбрать папку для загрузки")
         if folder_path:
             self.input_field.setText(folder_path)
-            # Update the variable here as well
-            self.source_files_folder = folder_path
+            self.source_files_path = folder_path
 
     def browse_output_folder(self):
         folder_path = QFileDialog.getExistingDirectory(self, "Выбрать папку для выгрузки")
         if folder_path:
             self.output_field.setText(folder_path)
+            self.db_index_path = folder_path
 
     def browse_excel_file(self):
         file_path, _ = QFileDialog.getOpenFileName(
@@ -593,24 +689,6 @@ class IndexApp(QWidget):
     def update_markdown_files_path(self, text):
         self.markdown_files_path = text
 
-    def browse_folder(self):
-        folder_path = QFileDialog.getExistingDirectory(self, "Выбрать папку для загрузки")
-        if folder_path:
-            self.input_field.setText(folder_path)
-            self.source_files_path = folder_path
-
-    def browse_output_folder(self):
-        folder_path = QFileDialog.getExistingDirectory(self, "Выбрать папку для выгрузки")
-        if folder_path:
-            self.output_field.setText(folder_path)
-            self.db_index_path = folder_path
-
-    def browse_markdown_folder(self):
-        folder_path = QFileDialog.getExistingDirectory(self, "Выбрать папку с markdown файлами")
-        if folder_path:
-            self.markdown_field.setText(folder_path)
-            self.markdown_files_path = folder_path  
-            
     def save_left_field_content(self):
         try:
             current_dir = os.getcwd()
@@ -622,16 +700,22 @@ class IndexApp(QWidget):
             QMessageBox.information(self, "Сохранено", "Вопрос успешно сохранен в файл paths.txt")
         except Exception as e:
             QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить вопрос: {str(e)}")                    
+    
+    # Add these new methods
+    def update_chunk_size(self, value):
+        self.chunk_size = value
 
+    def update_overlap(self, value):
+        self.overlap = value
+
+    # Modify the run_script method to include the new fields
     def run_script(self):
         input_folder = self.input_field.text()
         output_folder = self.output_field.text()
         markdown_folder = self.markdown_field.text()
         extra_path = self.extra_field.text()
-
-        if not input_folder or not output_folder:
-            QMessageBox.warning(self, "Input Error", "Please select both input and output folders.")
-            return
+        chunk_size = self.chunk_size_slider.value()  # Get value from QSlider
+        overlap = self.overlap_slider.value()  # Get value from QSlider
 
         try:
             # Define the path for paths.txt in the current working directory
@@ -644,6 +728,8 @@ class IndexApp(QWidget):
                 f.write(f"Output Folder: {output_folder}\n")
                 f.write(f"Markdown Folder: {markdown_folder}\n")
                 f.write(f"Extra Path: {extra_path}\n")
+                f.write(f"Chunk Size: {chunk_size}\n")  # Updated to use QSlider value
+                f.write(f"Text Overlap: {overlap}\n")  # Updated to use QSlider value
 
             # Verify that the file was created
             if os.path.exists(paths_file):
@@ -713,6 +799,7 @@ class IndexApp(QWidget):
         if folder_path:
             self.extra_field.setText(folder_path)
             self.extra_path = folder_path
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
