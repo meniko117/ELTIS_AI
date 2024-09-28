@@ -85,6 +85,7 @@ class Sidebar(QFrame):
 
         self.setLayout(self.main_layout)
 
+
     def toggle_sidebar(self):
         self.animation = QPropertyAnimation(self, b"minimumWidth")
         self.animation.setDuration(300)
@@ -242,7 +243,7 @@ class IndexApp(QWidget):
                 background-color: #27ae60;
             }
         """)
-        self.save_left_field_button.clicked.connect(self.save_left_field_content)
+        self.save_left_field_button.clicked.connect(self.save_and_query_llm)  # Connect to the same function as save_and_query_button
         home_layout.addWidget(self.save_left_field_button, alignment=Qt.AlignTop | Qt.AlignHCenter)
 
         # Two QTextEdits: left_field and right_field
@@ -275,6 +276,29 @@ class IndexApp(QWidget):
 
         self.home_page.setLayout(home_layout)
         self.stacked_widget.addWidget(self.home_page)
+        
+        #################################
+        #   # Add a new button for saving and querying
+        # self.save_and_query_button = QPushButton("Сохранить и запросить LLM")
+        # self.save_and_query_button.setFixedSize(250, 50)
+        # self.save_and_query_button.setFont(QFont("Arial", 12))
+        # self.save_and_query_button.setStyleSheet("""
+        #     QPushButton {
+        #         background-color: #3498db;
+        #         color: white;
+        #         border: none;
+        #         border-radius: 5px;
+        #     }
+        #     QPushButton:hover {
+        #         background-color: #2980b9;
+        #     }
+        # """)
+        # self.save_and_query_button.clicked.connect(self.save_and_query_llm)
+        
+        # # Add this button to your layout (adjust as needed based on your existing layout)
+        # fields_layout.addWidget(self.save_and_query_button)
+        ################################
+
 
         # Settings Page
         self.settings_page = QWidget()
@@ -953,6 +977,50 @@ class IndexApp(QWidget):
             self.extra_field.setText(folder_path)
             self.extra_path = folder_path
 
+    #######################################################
+    def save_and_query_llm(self):
+        try:
+            # First, save the content
+            self.save_left_field_content()
+
+            # Then, query the LLM
+            text_to_send_tech_support = self.left_field.toPlainText()
+            
+            # Run the query_LLM.py script
+            result = subprocess.run(
+                ['python', r'C:\Users\134\Documents\Python Scripts\query_LLM.py'],
+                input=text_to_send_tech_support,
+                text=True,
+                capture_output=True,
+                check=True
+            )
+
+            # Get the output from the script
+            claude_reply_tech_support = result.stdout.strip()
+
+            # Update the right field with the response
+            self.right_field.setPlainText(claude_reply_tech_support)
+
+            QMessageBox.information(self, "Успех", "Запрос к LLM выполнен успешно")
+        except subprocess.CalledProcessError as e:
+            QMessageBox.critical(self, "Ошибка", f"Ошибка при выполнении скрипта LLM: {e}")
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Неожиданная ошибка: {str(e)}")
+
+    def save_left_field_content(self):
+        try:
+            current_dir = os.getcwd()
+            paths_file = os.path.join(current_dir, 'paths.txt')
+            
+            with open(paths_file, 'a', encoding='utf-8') as f:
+                f.write(f"Question: {self.left_field.toPlainText()}\n")
+            
+            QMessageBox.information(self, "Сохранено", "Вопрос успешно сохранен в файл paths.txt")
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить вопрос: {str(e)}")
+
+    
+    
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
