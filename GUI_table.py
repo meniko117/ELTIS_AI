@@ -151,7 +151,7 @@ class Header(QFrame):
         layout = QHBoxLayout()
         layout.setContentsMargins(20, 0, 20, 0)
 
-        self.title = QLabel("E-Цифра Менеджер")
+        self.title = QLabel("Конструктор RAG-запросов к языковой модели")
         title_font = QFont("Arial", 20, QFont.Bold)
         self.title.setFont(title_font)
         self.title.setStyleSheet("color: white;")
