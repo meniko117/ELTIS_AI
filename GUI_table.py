@@ -314,182 +314,195 @@ class IndexApp(QWidget):
                 # Handle potential decoding errors or JSON format errors
                 print("Error reading paths from paths.json")
 
-            # Start of Selection
-            # Sample descriptions for each field
-            input_description = QLabel("Папка с исходными файлами")
-            input_description.setFont(QFont("Arial", 12))
-            input_icon = QLabel()
-            input_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
-            input_icon.setToolTip("Папка с исходными файлами")
-            
-            markdown_description = QLabel("Папка с Markdown файлами")
-            markdown_description.setFont(QFont("Arial", 12))
-            markdown_icon = QLabel()
-            markdown_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
-            markdown_icon.setToolTip("Папка с Markdown файлами")
-            
-            output_description = QLabel("Папка для базы данных с индексом")
-            output_description.setFont(QFont("Arial", 12))
-            output_icon = QLabel()
-            output_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
-            output_icon.setToolTip("Папка для базы данных с индексом")
-            
-            extra_description = QLabel("Путь к метасправочнику")
-            extra_description.setFont(QFont("Arial", 12))
-            extra_icon = QLabel()
-            extra_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
-            extra_icon.setToolTip("Путь к метасправочнику")
-            
-            config_description = QLabel("Путь к конфигурационному файлу")
-            config_description.setFont(QFont("Arial", 12))
-            config_icon = QLabel()
-            config_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
-            config_icon.setToolTip("Путь к конфигурационному файлу")
-    
-            # Input Folder
-            input_desc_icon_layout = QHBoxLayout()
-            input_desc_icon_layout.addWidget(input_description)
-            input_desc_icon_layout.addWidget(input_icon)
-            input_desc_icon_layout.addStretch()
-            
-            input_layout = QVBoxLayout()
-            input_layout.addLayout(input_desc_icon_layout)  # Added to input_layout instead of fields_layout
-    
-            input_field_layout = QHBoxLayout()
-            self.input_field = QLineEdit()
-            self.input_field.setText(paths.get('Source Files Folder', ''))
-            self.input_field.setFixedHeight(40)
-            self.input_field.setFixedWidth(400)  # Set width to 400 pixels
-            self.input_field.setFont(QFont("Arial", 12))
-            self.input_field.textChanged.connect(self.update_source_files_path)
-            input_field_layout.addWidget(self.input_field)
-            self.browse_button = QPushButton("Найти")
-            self.browse_button.setFixedSize(80, 40)
-            self.browse_button.setFont(QFont("Arial", 12))
-            self.browse_button.clicked.connect(self.browse_folder)
-            input_field_layout.addWidget(self.browse_button)
-            input_layout.addLayout(input_field_layout)
-            input_markdown_layout.addLayout(input_layout)
-    
-            # Markdown Folder
-            markdown_layout = QVBoxLayout()
-            markdown_desc_icon_layout = QHBoxLayout()
-            markdown_desc_icon_layout.addWidget(markdown_description)
-            markdown_desc_icon_layout.addWidget(markdown_icon)
-            markdown_desc_icon_layout.addStretch()
-            markdown_layout.addLayout(markdown_desc_icon_layout)
-    
-            markdown_field_layout = QHBoxLayout()
-            self.markdown_field = QLineEdit()
-            self.markdown_field.setText(paths.get('Markdown Folder', ''))
-            self.markdown_field.setFixedHeight(40)
-            self.markdown_field.setFixedWidth(400)  # Set width to 400 pixels
-            self.markdown_field.setFont(QFont("Arial", 12))
-            self.markdown_field.textChanged.connect(self.update_markdown_files_path)
-            markdown_field_layout.addWidget(self.markdown_field)
-            self.browse_markdown_button = QPushButton("Найти")
-            self.browse_markdown_button.setFixedSize(80, 40)
-            self.browse_markdown_button.setFont(QFont("Arial", 12))
-            self.browse_markdown_button.clicked.connect(self.browse_markdown_folder)
-            markdown_field_layout.addWidget(self.browse_markdown_button)
-            markdown_layout.addLayout(markdown_field_layout)
-            input_markdown_layout.addLayout(markdown_layout)
-    
-            input_output_markdown_layout.addLayout(input_markdown_layout)
-    
-            # Output and Extra Field Layout
-            output_extra_layout = QVBoxLayout()
-    
-            # Output Folder
-            output_layout = QVBoxLayout()
-            output_desc_icon_layout = QHBoxLayout()
-            output_desc_icon_layout.addWidget(output_description)
-            output_desc_icon_layout.addWidget(output_icon)
-            output_desc_icon_layout.addStretch()
-            output_layout.addLayout(output_desc_icon_layout)
-    
-            output_field_layout = QHBoxLayout()
-            self.output_field = QLineEdit()
-            self.output_field.setText(paths.get('Output Folder', ''))
-            self.output_field.setFixedHeight(40)
-            self.output_field.setFixedWidth(400)  # Set width to 400 pixels
-            self.output_field.setFont(QFont("Arial", 12))
-            self.output_field.textChanged.connect(self.update_db_index_path)
-            output_field_layout.addWidget(self.output_field)
-            self.browse_output_button = QPushButton("Найти")
-            self.browse_output_button.setFixedSize(80, 40)
-            self.browse_output_button.setFont(QFont("Arial", 12))
-            self.browse_output_button.clicked.connect(self.browse_output_folder)
-            output_field_layout.addWidget(self.browse_output_button)
-            output_layout.addLayout(output_field_layout)
-            output_extra_layout.addLayout(output_layout)
-    
-            # Extra Field
-            extra_layout = QVBoxLayout()
-            extra_desc_icon_layout = QHBoxLayout()
-            extra_desc_icon_layout.addWidget(extra_description)
-            extra_desc_icon_layout.addWidget(extra_icon)
-            extra_desc_icon_layout.addStretch()
-            extra_layout.addLayout(extra_desc_icon_layout)
-    
-            extra_field_layout = QHBoxLayout()
-            self.extra_field = QLineEdit()
-            self.extra_field.setText(paths.get('Extra Path', ''))
-            self.extra_field.setFixedHeight(40)
-            self.extra_field.setFixedWidth(400)  # Set width to 400 pixels
-            self.extra_field.setFont(QFont("Arial", 12))
-            self.extra_field.textChanged.connect(self.update_extra_path)
-            extra_field_layout.addWidget(self.extra_field)
-            self.extra_button = QPushButton("Найти")
-            self.extra_button.setFixedSize(80, 40)
-            self.extra_button.setFont(QFont("Arial", 12))
-            self.extra_button.clicked.connect(self.browse_extra_folder)
-            extra_field_layout.addWidget(self.extra_button)
-            extra_layout.addLayout(extra_field_layout)
-            output_extra_layout.addLayout(extra_layout)
-    
-            # Configuration File Field
-            config_layout = QVBoxLayout()
-            config_desc_icon_layout = QHBoxLayout()
-            config_desc_icon_layout.addWidget(config_description)
-            config_desc_icon_layout.addWidget(config_icon)
-            config_desc_icon_layout.addStretch()
-            config_layout.addLayout(config_desc_icon_layout)
-    
-            config_field_layout = QHBoxLayout()
-            self.config_field = QLineEdit()
-            self.config_field.setText(paths.get('Config File Path', ''))
-            self.config_field.setFixedHeight(40)
-            self.config_field.setFixedWidth(400)  # Set width to 400 pixels
-            self.config_field.setFont(QFont("Arial", 12))
-            self.config_field.textChanged.connect(self.update_config_field)
-            config_field_layout.addWidget(self.config_field)
-            self.browse_config_button = QPushButton("Найти")
-            self.browse_config_button.setFixedSize(80, 40)
-            self.browse_config_button.setFont(QFont("Arial", 12))
-            self.browse_config_button.clicked.connect(self.browse_config_folder)
-            config_field_layout.addWidget(self.browse_config_button)
-            config_layout.addLayout(config_field_layout)
-            output_extra_layout.addLayout(config_layout)
-    
-            input_output_markdown_layout.addLayout(output_extra_layout)
-    
-            # Add input_output_markdown_layout to top_layout
-            top_layout.addLayout(input_output_markdown_layout)
-            
-            # Create a new layout for the additional fields
-            additional_fields_layout = QVBoxLayout()
-    
-            # Create a QGroupBox for the additional fields
-            additional_fields_group = QGroupBox()
-            additional_fields_group.setStyleSheet("""
-                QGroupBox {
-                    border: 1px solid #cccccc;
-                    border-radius: 5px;
-                    margin-top: 10px;
-                }
-            """)
-            additional_fields_layout = QVBoxLayout(additional_fields_group)
+        # Start of Selection
+        # Create a QFrame to hold all the fields
+        fields_frame = QFrame()
+        fields_frame.setFrameStyle(QFrame.Box | QFrame.Sunken)
+        fields_frame.setLineWidth(1)
+        fields_frame.setMidLineWidth(0)
+        fields_frame.setStyleSheet("QFrame { background-color: transparent; border: 1px solid #CCCCCC; }")
+        
+        fields_layout = QVBoxLayout(fields_frame)
+        
+        # Sample descriptions for each field
+        input_description = QLabel("Папка с исходными файлами")
+        input_description.setFont(QFont("Arial", 12))
+        input_description.setStyleSheet("border: none;")
+        input_icon = QLabel()
+        input_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
+        input_icon.setToolTip("Папка с исходными файлами")
+        input_icon.setStyleSheet("border: none;")
+        
+        markdown_description = QLabel("Папка с Markdown файлами")
+        markdown_description.setFont(QFont("Arial", 12))
+        markdown_description.setStyleSheet("border: none;")
+        markdown_icon = QLabel()
+        markdown_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
+        markdown_icon.setToolTip("Папка с Markdown файлами")
+        markdown_icon.setStyleSheet("border: none;")
+        
+        output_description = QLabel("Папка для базы данных с индексом")
+        output_description.setFont(QFont("Arial", 12))
+        output_icon = QLabel()
+        output_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
+        output_icon.setToolTip("Папка для базы данных с индексом")
+        
+        extra_description = QLabel("Путь к метасправочнику")
+        extra_description.setFont(QFont("Arial", 12))
+        extra_icon = QLabel()
+        extra_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
+        extra_icon.setToolTip("Путь к метасправочнику")
+        
+        config_description = QLabel("Путь к конфигурационному файлу")
+        config_description.setFont(QFont("Arial", 12))
+        config_icon = QLabel()
+        config_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
+        config_icon.setToolTip("Путь к конфигурационному файлу")
+
+        # Input Folder
+        input_desc_icon_layout = QHBoxLayout()
+        input_desc_icon_layout.addWidget(input_description)
+        input_desc_icon_layout.addWidget(input_icon)
+        input_desc_icon_layout.addStretch()
+        
+        input_layout = QVBoxLayout()
+        input_layout.addLayout(input_desc_icon_layout)  # Added to input_layout instead of fields_layout
+
+        input_field_layout = QHBoxLayout()
+        self.input_field = QLineEdit()
+        self.input_field.setText(paths.get('Source Files Folder', ''))
+        self.input_field.setFixedHeight(40)
+        self.input_field.setFixedWidth(400)  # Set width to 400 pixels
+        self.input_field.setFont(QFont("Arial", 12))
+        self.input_field.textChanged.connect(self.update_source_files_path)
+        input_field_layout.addWidget(self.input_field)
+        self.browse_button = QPushButton("Найти")
+        self.browse_button.setFixedSize(80, 40)
+        self.browse_button.setFont(QFont("Arial", 12))
+        self.browse_button.clicked.connect(self.browse_folder)
+        input_field_layout.addWidget(self.browse_button)
+        input_layout.addLayout(input_field_layout)
+        fields_layout.addLayout(input_layout)
+
+        # Markdown Folder
+        markdown_layout = QVBoxLayout()
+        markdown_desc_icon_layout = QHBoxLayout()
+        markdown_desc_icon_layout.addWidget(markdown_description)
+        markdown_desc_icon_layout.addWidget(markdown_icon)
+        markdown_desc_icon_layout.addStretch()
+        markdown_layout.addLayout(markdown_desc_icon_layout)
+
+        markdown_field_layout = QHBoxLayout()
+        self.markdown_field = QLineEdit()
+        self.markdown_field.setText(paths.get('Markdown Folder', ''))
+        self.markdown_field.setFixedHeight(40)
+        self.markdown_field.setFixedWidth(400)  # Set width to 400 pixels
+        self.markdown_field.setFont(QFont("Arial", 12))
+        self.markdown_field.textChanged.connect(self.update_markdown_files_path)
+        markdown_field_layout.addWidget(self.markdown_field)
+        self.browse_markdown_button = QPushButton("Найти")
+        self.browse_markdown_button.setFixedSize(80, 40)
+        self.browse_markdown_button.setFont(QFont("Arial", 12))
+        self.browse_markdown_button.clicked.connect(self.browse_markdown_folder)
+        markdown_field_layout.addWidget(self.browse_markdown_button)
+        markdown_layout.addLayout(markdown_field_layout)
+        fields_layout.addLayout(markdown_layout)
+
+        input_output_markdown_layout.addWidget(fields_frame)
+
+        # Output and Extra Field Layout
+        output_extra_layout = QVBoxLayout()
+
+        # Output Folder
+        output_layout = QVBoxLayout()
+        output_desc_icon_layout = QHBoxLayout()
+        output_desc_icon_layout.addWidget(output_description)
+        output_desc_icon_layout.addWidget(output_icon)
+        output_desc_icon_layout.addStretch()
+        output_layout.addLayout(output_desc_icon_layout)
+
+        output_field_layout = QHBoxLayout()
+        self.output_field = QLineEdit()
+        self.output_field.setText(paths.get('Output Folder', ''))
+        self.output_field.setFixedHeight(40)
+        self.output_field.setFixedWidth(400)  # Set width to 400 pixels
+        self.output_field.setFont(QFont("Arial", 12))
+        self.output_field.textChanged.connect(self.update_db_index_path)
+        output_field_layout.addWidget(self.output_field)
+        self.browse_output_button = QPushButton("Найти")
+        self.browse_output_button.setFixedSize(80, 40)
+        self.browse_output_button.setFont(QFont("Arial", 12))
+        self.browse_output_button.clicked.connect(self.browse_output_folder)
+        output_field_layout.addWidget(self.browse_output_button)
+        output_layout.addLayout(output_field_layout)
+        output_extra_layout.addLayout(output_layout)
+
+        # Extra Field
+        extra_layout = QVBoxLayout()
+        extra_desc_icon_layout = QHBoxLayout()
+        extra_desc_icon_layout.addWidget(extra_description)
+        extra_desc_icon_layout.addWidget(extra_icon)
+        extra_desc_icon_layout.addStretch()
+        extra_layout.addLayout(extra_desc_icon_layout)
+
+        extra_field_layout = QHBoxLayout()
+        self.extra_field = QLineEdit()
+        self.extra_field.setText(paths.get('Extra Path', ''))
+        self.extra_field.setFixedHeight(40)
+        self.extra_field.setFixedWidth(400)  # Set width to 400 pixels
+        self.extra_field.setFont(QFont("Arial", 12))
+        self.extra_field.textChanged.connect(self.update_extra_path)
+        extra_field_layout.addWidget(self.extra_field)
+        self.extra_button = QPushButton("Найти")
+        self.extra_button.setFixedSize(80, 40)
+        self.extra_button.setFont(QFont("Arial", 12))
+        self.extra_button.clicked.connect(self.browse_extra_folder)
+        extra_field_layout.addWidget(self.extra_button)
+        extra_layout.addLayout(extra_field_layout)
+        output_extra_layout.addLayout(extra_layout)
+
+        # Configuration File Field
+        config_layout = QVBoxLayout()
+        config_desc_icon_layout = QHBoxLayout()
+        config_desc_icon_layout.addWidget(config_description)
+        config_desc_icon_layout.addWidget(config_icon)
+        config_desc_icon_layout.addStretch()
+        config_layout.addLayout(config_desc_icon_layout)
+
+        config_field_layout = QHBoxLayout()
+        self.config_field = QLineEdit()
+        self.config_field.setText(paths.get('Config File Path', ''))
+        self.config_field.setFixedHeight(40)
+        self.config_field.setFixedWidth(400)  # Set width to 400 pixels
+        self.config_field.setFont(QFont("Arial", 12))
+        self.config_field.textChanged.connect(self.update_config_field)
+        config_field_layout.addWidget(self.config_field)
+        self.browse_config_button = QPushButton("Найти")
+        self.browse_config_button.setFixedSize(80, 40)
+        self.browse_config_button.setFont(QFont("Arial", 12))
+        self.browse_config_button.clicked.connect(self.browse_config_folder)
+        config_field_layout.addWidget(self.browse_config_button)
+        config_layout.addLayout(config_field_layout)
+        output_extra_layout.addLayout(config_layout)
+
+        input_output_markdown_layout.addLayout(output_extra_layout)
+
+        # Add input_output_markdown_layout to top_layout
+        top_layout.addLayout(input_output_markdown_layout)
+        
+        # Create a new layout for the additional fields
+        additional_fields_layout = QVBoxLayout()
+
+        # Create a QGroupBox for the additional fields
+        additional_fields_group = QGroupBox()
+        additional_fields_group.setStyleSheet("""
+            QGroupBox {
+                border: 1px solid #cccccc;
+                border-radius: 5px;
+                margin-top: 10px;
+            }
+        """)
+        additional_fields_layout = QVBoxLayout(additional_fields_group)
 
         # Start of Selection
         # Text chunk size field with QSlider and labels
