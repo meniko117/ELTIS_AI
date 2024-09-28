@@ -1,6 +1,7 @@
 import sys
 import os
 import pandas as pd
+import json
 from PySide6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout,
     QFileDialog, QMessageBox, QHBoxLayout, QFrame, QStackedWidget,
@@ -183,6 +184,7 @@ class IndexApp(QWidget):
         self.overlap = ""
         self.left_text = ""
         self.right_text = ""
+        self.config_field_value = ""  # New variable for config field
 
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -299,30 +301,17 @@ class IndexApp(QWidget):
         # Input and Markdown Folder Layout
         input_markdown_layout = QVBoxLayout()
 
-        # Read paths from paths.txt
+        # Read paths from paths.json
         current_dir = os.getcwd()
-        paths_file = os.path.join(current_dir, 'paths.txt')
+        paths_file = os.path.join(current_dir, 'paths.json')
         paths = {}
         if os.path.exists(paths_file):
             try:
                 with open(paths_file, 'r', encoding='utf-8') as f:
-                    for line in f:
-                        try:
-                            key, value = line.strip().split(': ', 1)
-                            paths[key] = value
-                        except ValueError:
-                            # Skip lines that don't have the expected format
-                            continue
-            except UnicodeDecodeError:
-                # If UTF-8 fails, try with 'cp1251' encoding (Windows Cyrillic)
-                with open(paths_file, 'r', encoding='cp1251') as f:
-                    for line in f:
-                        try:
-                            key, value = line.strip().split(': ', 1)
-                            paths[key] = value
-                        except ValueError:
-                            # Skip lines that don't have the expected format
-                            continue
+                    paths = json.load(f)  # Load the JSON data directly
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                # Handle potential decoding errors or JSON format errors
+                print("Error reading paths from paths.json")
 
         # Sample descriptions for each field
         input_description = QLabel("Папка с исходными файлами")
@@ -333,6 +322,8 @@ class IndexApp(QWidget):
         output_description.setFont(QFont("Arial", 12))
         extra_description = QLabel("Путь к метасправочнику")
         extra_description.setFont(QFont("Arial", 12))
+        config_description = QLabel("Путь к конфигурационному файлу")
+        config_description.setFont(QFont("Arial", 12))
 
         # Input Folder
         input_layout = QVBoxLayout()
@@ -415,6 +406,25 @@ class IndexApp(QWidget):
         extra_layout.addLayout(extra_field_layout)
         output_extra_layout.addLayout(extra_layout)
 
+        # Configuration File Field
+        config_layout = QVBoxLayout()
+        config_layout.addWidget(config_description)
+        config_field_layout = QHBoxLayout()
+        self.config_field = QLineEdit()
+        self.config_field.setText(paths.get('Config File Path', ''))
+        self.config_field.setFixedHeight(40)
+        self.config_field.setFixedWidth(400)  # Set width to 400 pixels
+        self.config_field.setFont(QFont("Arial", 12))
+        self.config_field.textChanged.connect(self.update_config_field)
+        config_field_layout.addWidget(self.config_field)
+        self.browse_config_button = QPushButton("Найти")
+        self.browse_config_button.setFixedSize(80, 40)
+        self.browse_config_button.setFont(QFont("Arial", 12))
+        self.browse_config_button.clicked.connect(self.browse_config_folder)
+        config_field_layout.addWidget(self.browse_config_button)
+        config_layout.addLayout(config_field_layout)
+        output_extra_layout.addLayout(config_layout)
+
         input_output_markdown_layout.addLayout(output_extra_layout)
 
         # Add input_output_markdown_layout to top_layout
@@ -435,8 +445,6 @@ class IndexApp(QWidget):
         additional_fields_layout = QVBoxLayout(additional_fields_group)
 
         # Start of Selection
-        # Start of Selection
-        # Text chunk size field with QSlider and labels
         # Text chunk size field with QSlider and labels
         chunk_size_layout = QVBoxLayout()
         chunk_size_description = QLabel("размер части текста")
@@ -466,6 +474,9 @@ class IndexApp(QWidget):
         chunk_size_layout.addLayout(chunk_size_labels_layout)
         
         additional_fields_layout.addLayout(chunk_size_layout)
+        
+        # Add vertical spacing (3 times the original)
+        chunk_size_layout.addSpacing(40)  # Assuming original spacing was 20, now it's 60
 
         # Text overlap field with QSlider and labels
         overlap_layout = QVBoxLayout()
@@ -496,6 +507,9 @@ class IndexApp(QWidget):
         overlap_layout.addLayout(overlap_labels_layout)
         
         additional_fields_layout.addLayout(overlap_layout)
+        
+        # Add vertical spacing (3 times the original)
+        overlap_layout.addSpacing(60)  # Assuming original spacing was 20, now it's 60
 
         # LLM Model selection dropdown
         model_layout = QVBoxLayout()
@@ -652,7 +666,6 @@ class IndexApp(QWidget):
     def update_right_text(self):
         self.right_text = self.right_field.toPlainText()
 
-    # Add this method to update the variable when text changes
     def update_source_files_path(self, text):
         self.source_files_path = text
 
@@ -675,13 +688,22 @@ class IndexApp(QWidget):
         if file_path:
             self.path_field.setText(file_path)
             
+    def browse_config_folder(self):
+        # Open a file dialog to select a configuration file
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, 
+            "Выбрать конфигурационный файл", 
+            "", 
+            "Config Files (*.json *.yaml *.cfg);;All Files (*)"
+        )
+        if file_path:
+            self.config_field.setText(file_path)
+            self.config_field_value = file_path
+            
     def browse_markdown_folder(self):
         folder_path = QFileDialog.getExistingDirectory(self, "Выбрать папку с markdown файлами")
         if folder_path:
             self.markdown_field.setText(folder_path)  
-
-    def update_source_files_path(self, text):
-        self.source_files_path = text
 
     def update_db_index_path(self, text):
         self.db_index_path = text
@@ -708,43 +730,63 @@ class IndexApp(QWidget):
     def update_overlap(self, value):
         self.overlap = value
 
+    def update_config_field(self, text):
+        self.config_field_value = text
+
     # Modify the run_script method to include the new fields
     def run_script(self):
         input_folder = self.input_field.text()
         output_folder = self.output_field.text()
         markdown_folder = self.markdown_field.text()
         extra_path = self.extra_field.text()
-        chunk_size = self.chunk_size_slider.value()  # Get value from QSlider
-        overlap = self.overlap_slider.value()  # Get value from QSlider
+        chunk_size = self.chunk_size_slider.value()
+        overlap = self.overlap_slider.value()
+        model_dropdown = self.model_dropdown.currentText()
+        config_folder = self.config_field_value  # Use the updated config_field_value
 
         try:
-            # Define the path for paths.txt in the current working directory
+            # Define the path for paths.json in the current working directory
             current_dir = os.getcwd()
-            paths_file = os.path.join(current_dir, 'paths.txt')
+            paths_file = os.path.join(current_dir, 'paths.json')
             
-            # Save all field values to paths.txt
+            # Save all field values to paths.json
+            data = {
+                "Source Files Folder": input_folder,
+                "Output Folder": output_folder,
+                "Markdown Folder": markdown_folder,
+                "Extra Path": extra_path,
+                "Chunk Size": chunk_size,
+                "Text Overlap": overlap,
+                "Model": model_dropdown,
+                "Config File Path": config_folder
+            }
+            
             with open(paths_file, 'w', encoding='utf-8') as f:
-                f.write(f"Source Files Folder: {input_folder}\n")
-                f.write(f"Output Folder: {output_folder}\n")
-                f.write(f"Markdown Folder: {markdown_folder}\n")
-                f.write(f"Extra Path: {extra_path}\n")
-                f.write(f"Chunk Size: {chunk_size}\n")  # Updated to use QSlider value
-                f.write(f"Text Overlap: {overlap}\n")  # Updated to use QSlider value
+                json.dump(data, f, ensure_ascii=False, indent=4)
 
-            # Verify that the file was created
             if os.path.exists(paths_file):
                 file_size = os.path.getsize(paths_file)
-                QMessageBox.information(self, "File Saved", f"paths.txt was successfully created at {paths_file}\nFile size: {file_size} bytes")
+                QMessageBox.information(
+                    self, 
+                    "File Saved", 
+                    f"paths.json was successfully created at {paths_file}\nFile size: {file_size} bytes"
+                )
             else:
-                QMessageBox.warning(self, "File Not Found", f"paths.txt was not found at {paths_file}")
+                QMessageBox.warning(
+                    self, 
+                    "File Not Found", 
+                    f"paths.json was not found at {paths_file}"
+                )
 
             # Run the external python script with the folder paths as arguments
             subprocess.run([
-                'python', r"C:\Users\134\Documents\Python Scripts\test_script_for_gui_button.py",
+                'python', 
+                r"C:\Users\134\Documents\Python Scripts\test_script_for_gui_button.py",
                 '--input_folder', input_folder,
                 '--output_folder', output_folder,
                 '--markdown_folder', markdown_folder,
-                '--extra_path', extra_path
+                '--extra_path', extra_path,
+                '--config_path', config_folder  # Pass the config path
             ], check=True)
             QMessageBox.information(self, "Success", "Index creation completed.")
         except IOError as e:
