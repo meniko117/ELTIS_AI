@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QComboBox, QMenuBar, QMenu, QTableWidget, QTableWidgetItem, QHeaderView, QTextEdit, QGroupBox, QSlider, QGridLayout 
 )
 from PySide6.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve
-from PySide6.QtGui import QIcon, QColor, QFont, QAction
+from PySide6.QtGui import QIcon, QColor, QFont, QAction, QPixmap
 from PySide6.QtWidgets import QSizePolicy
 
 import subprocess
@@ -645,6 +645,33 @@ class IndexApp(QWidget):
         about_layout.addWidget(about_label)
         self.about_page.setLayout(about_layout)
         self.stacked_widget.addWidget(self.about_page)
+
+        self.about_page = QWidget()
+        about_layout = QVBoxLayout()
+
+        about_label = QLabel("Инструкция для пользователя: как работать с LLM для настройки ИИ-агента техподдержки")
+        about_label.setFont(QFont("Arial", 16))
+        about_layout.addWidget(about_label)
+
+        # Create a QLabel to display the image
+        image_label = QLabel()
+
+        # Load the image (ensure the file path is correct)
+        pixmap = QPixmap(r"C:\Users\134\Downloads\Диаграмма без названия.drawio.png")
+
+        # Set the QPixmap on the QLabel
+        image_label.setPixmap(pixmap)
+
+        # Optionally, resize the QLabel to fit the image
+        #image_label.setFixedSize(600, 400) 
+        image_label.setScaledContents(True)
+
+        # Add the QLabel to the layout
+        about_layout.addWidget(image_label)
+
+        self.about_page.setLayout(about_layout)
+        self.stacked_widget.addWidget(self.about_page)
+
 
         # See Table Page
         self.see_table_page = QWidget()
