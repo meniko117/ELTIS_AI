@@ -349,35 +349,36 @@ class IndexApp(QWidget):
         fields_layout = QVBoxLayout(fields_frame)
         
         # Sample descriptions for each field
-        input_description = QLabel("Папка с исходными файлами")
+        input_description = QLabel("<b>Папка с исходными файлами</b>")
         input_description.setFont(QFont("Arial", 12))
         input_description.setStyleSheet("border: none;")
         input_icon = QLabel()
         input_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
-        input_icon.setToolTip("Папка с исходными файлами")
+        input_icon.setToolTip("<p> Папка с исходными документами, <br/> для которых нужно создать векторные представления в БД</p>")
         input_icon.setStyleSheet("border: none;")
         
-        markdown_description = QLabel("Папка с Markdown файлами")
+        markdown_description = QLabel("<b>Папка с Markdown файлами</b>")
         markdown_description.setFont(QFont("Arial", 12))
         markdown_description.setStyleSheet("border: none;")
         markdown_icon = QLabel()
         markdown_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
-        markdown_icon.setToolTip("Папка с Markdown файлами")
+        markdown_icon.setToolTip("Папка с исходными конвертированными <br/> файлами markdown разметкой")
         markdown_icon.setStyleSheet("border: none;")
         
-        output_description = QLabel("Папка для базы данных с индексом")
+        output_description = QLabel("<b>Папка для базы данных с индексом</b>")
         output_description.setFont(QFont("Arial", 12))
         output_icon = QLabel()
         output_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
-        output_icon.setToolTip("Папка для базы данных с индексом")
+        output_icon.setToolTip("Папка для базы данных с векторынми представлениями")
         
-        extra_description = QLabel("Путь к метасправочнику")
+        extra_description = QLabel("<b>Путь к метасправочнику</b>")
         extra_description.setFont(QFont("Arial", 12))
         extra_icon = QLabel()
         extra_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
-        extra_icon.setToolTip("Путь к метасправочнику")
+        extra_icon.setToolTip('''Путь к метасправочнику, в котором содержится информация в каких документах искать информацию. <br/> 
+                              Например, если в вопросе указана конкретная модель БВД, то ответ будет основан на тех.документации для этого БВД''')
         
-        config_description = QLabel("Путь к конфигурационному файлу")
+        config_description = QLabel("<b>Путь к конфигурационному файлу</b>")
         config_description.setFont(QFont("Arial", 12))
         config_icon = QLabel()
         config_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
@@ -514,6 +515,9 @@ class IndexApp(QWidget):
         # Add input_output_markdown_layout to top_layout
         top_layout.addLayout(input_output_markdown_layout)
         
+        # Add vertical spacing (3 times the original)
+        top_layout.addSpacing(60)  # Assuming original spacing was 20, now it's 60
+
         # Create a new layout for the additional fields
         additional_fields_layout = QVBoxLayout()
 
@@ -531,10 +535,19 @@ class IndexApp(QWidget):
         # Start of Selection
         # Text chunk size field with QSlider and labels
         chunk_size_layout = QVBoxLayout()
-        chunk_size_description = QLabel("размер части текста")
+        chunk_size_desc_icon_layout = QHBoxLayout()
+        chunk_size_description = QLabel("<b>размер векторного представления текста</b>")
         chunk_size_description.setFont(QFont("Arial", 12))
-        chunk_size_layout.addWidget(chunk_size_description)
+        chunk_size_desc_icon_layout.addWidget(chunk_size_description)
         
+        # Add QIcon for chunk_size_slider
+        chunk_size_icon = QLabel()
+        chunk_size_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
+        chunk_size_icon.setToolTip("Используйте этот слайдер для настройки размера фрагмента для векторного представления текста.")
+        chunk_size_desc_icon_layout.addWidget(chunk_size_icon)
+        chunk_size_desc_icon_layout.addStretch()
+        chunk_size_layout.addLayout(chunk_size_desc_icon_layout)
+
         # Initialize the QSlider for chunk size
         self.chunk_size_slider = QSlider(Qt.Horizontal)
         self.chunk_size_slider.setRange(500, 5000)  # Set range from 500 to 5000
@@ -543,7 +556,7 @@ class IndexApp(QWidget):
         self.chunk_size_slider.setTickPosition(QSlider.TicksBelow)
         self.chunk_size_slider.setValue(int(paths.get('Chunk Size', 500)))  # Default value
         self.chunk_size_slider.valueChanged.connect(self.update_chunk_size)
-        self.chunk_size_slider.setToolTip("Adjust the chunk size of the text")
+        self.chunk_size_slider.setToolTip("Размер фрагмента текста для векторного представления (в символах)")
         chunk_size_layout.addWidget(self.chunk_size_slider)
         
         # Define and add chunk size labels below the slider
@@ -557,6 +570,7 @@ class IndexApp(QWidget):
             chunk_size_labels_layout.addWidget(label)
         chunk_size_layout.addLayout(chunk_size_labels_layout)
         
+
         additional_fields_layout.addLayout(chunk_size_layout)
         
         # Add vertical spacing (3 times the original)
@@ -564,9 +578,18 @@ class IndexApp(QWidget):
 
         # Text overlap field with QSlider and labels
         overlap_layout = QVBoxLayout()
-        overlap_description = QLabel("перекрытие текста")
+        overlap_desc_icon_layout = QHBoxLayout()
+        overlap_description = QLabel("<b>'перекрытие' текста, %</b>")
         overlap_description.setFont(QFont("Arial", 12))
-        overlap_layout.addWidget(overlap_description)
+        overlap_desc_icon_layout.addWidget(overlap_description)
+        
+        # Add QIcon for overlap_slider
+        overlap_icon = QLabel()
+        overlap_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
+        overlap_icon.setToolTip("Используйте этот слайдер для настройки процента перекрытия текста.")
+        overlap_desc_icon_layout.addWidget(overlap_icon)
+        overlap_desc_icon_layout.addStretch()
+        overlap_layout.addLayout(overlap_desc_icon_layout)
         
         # Initialize the QSlider for text overlap
         self.overlap_slider = QSlider(Qt.Horizontal)
@@ -597,7 +620,7 @@ class IndexApp(QWidget):
 
         # LLM Model selection dropdown
         model_layout = QVBoxLayout()
-        model_description = QLabel("Выберите LLM модель")
+        model_description = QLabel("<b>Выберите LLM модель</b>")
         model_description.setFont(QFont("Arial", 12))
         model_layout.addWidget(model_description)
         self.model_dropdown = QComboBox()
@@ -617,9 +640,18 @@ class IndexApp(QWidget):
 
         # System Prompt Field
         system_prompt_layout = QVBoxLayout()
-        system_prompt_description = QLabel("Системный промпт")
+        system_prompt_desc_icon_layout = QHBoxLayout()
+        system_prompt_description = QLabel("<b>Системный промпт</b>")
         system_prompt_description.setFont(QFont("Arial", 12))
-        system_prompt_layout.addWidget(system_prompt_description)
+        system_prompt_desc_icon_layout.addWidget(system_prompt_description)
+        
+        # Add QIcon for system_prompt_description
+        system_prompt_icon = QLabel()
+        system_prompt_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
+        system_prompt_icon.setToolTip("Введите системный промпт для настройки модели.")
+        system_prompt_desc_icon_layout.addWidget(system_prompt_icon)
+        system_prompt_desc_icon_layout.addStretch()
+        system_prompt_layout.addLayout(system_prompt_desc_icon_layout)
 
         self.system_prompt_field = QTextEdit()  # Initialize the QTextEdit field
         self.system_prompt_field.setPlaceholderText("Системный промпт")
