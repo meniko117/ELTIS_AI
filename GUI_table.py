@@ -1008,10 +1008,20 @@ class IndexApp(QWidget):
             for i in range(df.shape[0]):
                 for j in range(df.shape[1]):
                     item = QTableWidgetItem(str(df.iat[i, j]))
+                    item.setTextAlignment(Qt.AlignTop | Qt.AlignLeft)
                     self.table_widget.setItem(i, j, item)
 
-            # Adjust column sizes based on content
-            self.table_widget.resizeColumnsToContents()
+            # Set column width to 400 pt and enable word wrap
+            for col in range(self.table_widget.columnCount()):
+                self.table_widget.setColumnWidth(col, 400)
+                self.table_widget.horizontalHeader().setSectionResizeMode(col, QHeaderView.Fixed)
+
+            # Enable word wrap for all items
+            self.table_widget.setWordWrap(True)
+
+            # Adjust row heights to fit content
+            for row in range(self.table_widget.rowCount()):
+                self.table_widget.resizeRowToContents(row)
 
             QMessageBox.information(self, "Отлично!", "Excel файл загружен")
         except Exception as e:
