@@ -74,7 +74,7 @@ class Sidebar(QFrame):
 
         self.btn_see_table = QPushButton("История запросов")
         self.btn_see_table.setStyleSheet(button_style())
-        self.btn_see_table.setIcon(QIcon.fromTheme("insert-table"))
+        self.btn_see_table.setIcon(QIcon.fromTheme("help-faq"))
         self.btn_see_table.setIconSize(QSize(24, 24))
         self.button_layout.addWidget(self.btn_see_table)
 
@@ -634,7 +634,24 @@ class IndexApp(QWidget):
 
         # Add the QGroupBox to the input_output_markdown_layout
         input_output_markdown_layout.addWidget(additional_fields_group)
-        
+
+        # Add button above the System Prompt Field
+        self.save_button = QPushButton("Создать векторные представления документов")
+        self.save_button.setFixedSize(400, 40)  # Set width to 300 and height to 40
+        self.save_button.setFont(QFont("Arial", 12))
+        self.save_button.setStyleSheet("""
+            QPushButton {
+                background-color: #2980b9;
+                color: white;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #3498db;
+            }
+        """)
+        top_layout.addWidget(self.save_button)
+
         # Add vertical spacing (3 times the original)
         top_layout.addSpacing(60)  # Assuming original spacing was 20, now it's 60
 
@@ -1039,19 +1056,33 @@ class IndexApp(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Ошибка", f"Неожиданная ошибка: {str(e)}")
 
-    def save_left_field_content(self):
+    def save_left_and_right_field_content(self):
         try:
-            current_dir = os.getcwd()
-            paths_file = os.path.join(current_dir, 'paths.txt')
-            
-            with open(paths_file, 'a', encoding='utf-8') as f:
-                f.write(f"Question: {self.left_field.toPlainText()}\n")
-            
-            QMessageBox.information(self, "Сохранено", "Вопрос успешно сохранен в файл paths.txt")
-        except Exception as e:
-            QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить вопрос: {str(e)}")
+            import pandas as pd
+            import os
 
-    
+            current_dir = os.getcwd()
+            excel_file = os.path.join(current_dir, 'query_history.xlsx')
+
+            # Check if the Excel file exists, if not, create it with headers
+            if not os.path.isfile(excel_file):
+                # Create a DataFrame with headers
+                initial_data = pd.DataFrame(columns=['Question', 'Response'])
+                initial_data.to_excel(excel_file, index=False)
+
+            # Create a DataFrame to hold the question and response
+            question_data = pd.DataFrame({
+                'Question': [self.left_field.toPlainText()],
+                'Response': [self.right_field.toPlainText()]
+            })
+            
+            # Append the question and response to the Excel file
+            with pd.ExcelWriter(excel_file, mode='a', engine='openpyxl', if_sheet_exists='overlay') as writer:
+                question_data.to_excel(writer, index=False, header=False, startrow=writer.sheets['Sheet1'].max_row)
+
+            QMessageBox.information(self, "Сохранено", "Вопрос и ответ успешно сохранены в файл query_history.xlsx")
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить вопрос и ответ: {str(e)}")
     
 
 if __name__ == "__main__":
