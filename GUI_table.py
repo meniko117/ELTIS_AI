@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve
 from PySide6.QtGui import QIcon, QColor, QFont, QAction, QPixmap
 from PySide6.QtWidgets import QSizePolicy
+import datetime
 
 import subprocess
 
@@ -716,15 +717,6 @@ class IndexApp(QWidget):
         about_label = QLabel("Инструкция для пользователя: как работать с LLM для настройки ИИ-агента техподдержки")
         about_label.setFont(QFont("Arial", 16))
         about_layout.addWidget(about_label)
-        self.about_page.setLayout(about_layout)
-        self.stacked_widget.addWidget(self.about_page)
-
-        self.about_page = QWidget()
-        about_layout = QVBoxLayout()
-
-        about_label = QLabel("Инструкция для пользователя: как работать с LLM для настройки ИИ-агента техподдержки")
-        about_label.setFont(QFont("Arial", 16))
-        about_layout.addWidget(about_label)
 
         # Create a QLabel to display the image
         image_label = QLabel()
@@ -732,12 +724,22 @@ class IndexApp(QWidget):
         # Load the image (ensure the file path is correct)
         pixmap = QPixmap(r"C:\Users\134\Downloads\Диаграмма без названия.drawio.png")
 
-        # Set the QPixmap on the QLabel
-        image_label.setPixmap(pixmap)
+        # Calculate the aspect ratio of the original image
+        aspect_ratio = pixmap.width() / pixmap.height()
 
-        # Optionally, resize the QLabel to fit the image
-        #image_label.setFixedSize(600, 400) 
-        image_label.setScaledContents(True)
+        # Set a maximum width for the image (adjust as needed)
+        max_width = 800
+
+        # Scale the image while maintaining aspect ratio
+        scaled_pixmap = pixmap.scaledToWidth(max_width, Qt.SmoothTransformation)
+
+        # Set the scaled QPixmap on the QLabel
+        image_label.setPixmap(scaled_pixmap)
+
+        # Allow the image to resize with the window, but maintain aspect ratio
+        image_label.setScaledContents(False)
+        image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        image_label.setAlignment(Qt.AlignCenter)
 
         # Add the QLabel to the layout
         about_layout.addWidget(image_label)
@@ -1011,10 +1013,10 @@ class IndexApp(QWidget):
                     item.setTextAlignment(Qt.AlignTop | Qt.AlignLeft)
                     self.table_widget.setItem(i, j, item)
 
-            # Set column width to 400 pt and enable word wrap
-            for col in range(self.table_widget.columnCount()):
-                self.table_widget.setColumnWidth(col, 400)
-                self.table_widget.horizontalHeader().setSectionResizeMode(col, QHeaderView.Fixed)
+            # Set column widths
+            self.table_widget.setColumnWidth(0, 200)
+            self.table_widget.setColumnWidth(1, 300)
+            self.table_widget.setColumnWidth(2, 600)
 
             # Enable word wrap for all items
             self.table_widget.setWordWrap(True)
@@ -1061,6 +1063,9 @@ class IndexApp(QWidget):
             self.right_field.setPlainText(claude_reply_tech_support)
 
             QMessageBox.information(self, "Успех", "Запрос к LLM выполнен успешно")
+            
+            # save history pf questins and answers
+            self.save_left_and_right_field_content()
         except subprocess.CalledProcessError as e:
             QMessageBox.critical(self, "Ошибка", f"Ошибка при выполнении скрипта LLM: {e}")
         except Exception as e:
@@ -1082,8 +1087,9 @@ class IndexApp(QWidget):
 
             # Create a DataFrame to hold the question and response
             question_data = pd.DataFrame({
-                'Question': [self.left_field.toPlainText()],
-                'Response': [self.right_field.toPlainText()]
+                'Время': [datetime.datetime.now()],
+                'Вопрос': [self.left_field.toPlainText()],
+                'Ответ модели': [self.right_field.toPlainText()]
             })
             
             # Append the question and response to the Excel file
