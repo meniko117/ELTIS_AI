@@ -5,7 +5,7 @@ import json
 from PySide6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout,
     QFileDialog, QMessageBox, QHBoxLayout, QFrame, QStackedWidget,
-    QComboBox, QMenuBar, QMenu, QTableWidget, QTableWidgetItem, QHeaderView, QTextEdit, QGroupBox, QSlider, QGridLayout 
+    QComboBox, QMenuBar, QMenu, QTableWidget, QTableWidgetItem, QHeaderView, QTextEdit, QGroupBox, QSlider, QGridLayout, QCheckBox, QLayout
 )
 from PySide6.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve
 from PySide6.QtGui import QIcon, QColor, QFont, QAction, QPixmap
@@ -532,6 +532,7 @@ class IndexApp(QWidget):
             }
         """)
         additional_fields_layout = QVBoxLayout(additional_fields_group)
+        additional_fields_layout.setSizeConstraint(QLayout.SetMinAndMaxSize)
 
         # Start of Selection
         # Text chunk size field with QSlider and labels
@@ -571,7 +572,6 @@ class IndexApp(QWidget):
             chunk_size_labels_layout.addWidget(label)
         chunk_size_layout.addLayout(chunk_size_labels_layout)
         
-
         additional_fields_layout.addLayout(chunk_size_layout)
         
         # Add vertical spacing (3 times the original)
@@ -635,6 +635,53 @@ class IndexApp(QWidget):
 
         # Add the QGroupBox to the input_output_markdown_layout
         input_output_markdown_layout.addWidget(additional_fields_group)
+
+        # Add dropdown for number of relevant text parts
+        relevant_parts_layout = QVBoxLayout()
+        relevant_parts_desc_icon_layout = QHBoxLayout()
+        relevant_parts_description = QLabel("<b>Количество релевантных частей текста</b>")
+        relevant_parts_description.setFont(QFont("Arial", 12))
+        relevant_parts_desc_icon_layout.addWidget(relevant_parts_description)
+        
+        # Add QIcon for relevant_parts_dropdown
+        relevant_parts_icon = QLabel()
+        relevant_parts_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
+        relevant_parts_icon.setToolTip("Количество частей текста в порядке убывания релевантности")
+        relevant_parts_desc_icon_layout.addWidget(relevant_parts_icon)
+        relevant_parts_desc_icon_layout.addStretch()
+        relevant_parts_layout.addLayout(relevant_parts_desc_icon_layout)
+
+        self.relevant_parts_dropdown = QComboBox()
+        self.relevant_parts_dropdown.addItems([str(i) for i in range(1, 11)])
+        self.relevant_parts_dropdown.setCurrentText("3")
+        self.relevant_parts_dropdown.setFixedHeight(40)
+        self.relevant_parts_dropdown.setFixedWidth(200)
+        self.relevant_parts_dropdown.setFont(QFont("Arial", 12))
+        relevant_parts_layout.addWidget(self.relevant_parts_dropdown)
+        additional_fields_layout.addLayout(relevant_parts_layout)
+
+        # Add checkbox for including quotes in model response
+        include_quotes_layout = QVBoxLayout()
+        include_quotes_desc_icon_layout = QHBoxLayout()
+        include_quotes_description = QLabel("<b>Выводить в ответ модели цитаты из документа</b>")
+        include_quotes_description.setFont(QFont("Arial", 12))
+        include_quotes_desc_icon_layout.addWidget(include_quotes_description)
+        
+        # Add QIcon for include_quotes_checkbox
+        include_quotes_icon = QLabel()
+        include_quotes_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
+        include_quotes_icon.setToolTip("Приводить цитаты или только ответ")
+        include_quotes_desc_icon_layout.addWidget(include_quotes_icon)
+        include_quotes_desc_icon_layout.addStretch()
+        include_quotes_layout.addLayout(include_quotes_desc_icon_layout)
+
+        self.include_quotes_checkbox = QCheckBox()
+        self.include_quotes_checkbox.setFont(QFont("Arial", 12))
+        include_quotes_layout.addWidget(self.include_quotes_checkbox)
+        additional_fields_layout.addLayout(include_quotes_layout)
+
+        # Set size policy to make the layout expand vertically
+        additional_fields_group.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Add button above the System Prompt Field
         self.save_button = QPushButton("Создать векторные представления документов")
