@@ -5,16 +5,14 @@ from llama_index.core import StorageContext, load_index_from_storage
 
 from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, StorageContext, load_index_from_storage
 import openai
-
+import re  # Import regex for handling special characters
 
 ####################################################
 # get relevant info from Index
 ####################################################
 
-
 # Set your OpenAI API key
 openai.api_key = open_api_key
-
 # Path to save the index
 PERSIST_DIR = "./my_test_storage"
 
@@ -44,16 +42,12 @@ def query_index(index, question):
     return concatenated_results
 
 
-  
-
-
 
 ####################################################
 # query LLM
 ####################################################
 client = anthropic.Anthropic(
-    # defaults to os.environ.get("ANTHROPIC_API_KEY")
-    api_key=api_key_anthropic
+    api_key= anthropic_api_key
 )
 
 def send_message(text_to_send):
@@ -113,4 +107,7 @@ if __name__ == "__main__":
     Information from technical documentation: {relevant_info_from_documentation}'''
 
     claude_reply_tech_support = format_claude_reply(send_message(RAG_user_query))
+    # Reconfigure stdout to handle UTF-8 encoding
+    #sys.stdout.reconfigure(encoding='utf-8')
+    
     print(claude_reply_tech_support)
