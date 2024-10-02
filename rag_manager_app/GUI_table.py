@@ -975,6 +975,8 @@ class IndexApp(QWidget):
         model_dropdown = self.model_dropdown.currentText()
         config_folder = self.config_field_value  # Use the updated config_field_value
         system_prompt = self.system_prompt_field.toPlainText()  # Get the system prompt text
+        relevant_parts = self.relevant_parts_dropdown.currentText()  # Get the selected number of relevant parts
+        include_quotes = self.include_quotes_checkbox.isChecked()  # Get the state of the checkbox
 
         try:
             # Define the path for paths.json in the current working directory
@@ -991,7 +993,9 @@ class IndexApp(QWidget):
                 "Text Overlap": overlap,
                 "Model": model_dropdown,
                 "Config File Path": config_folder,
-                "System Prompt": system_prompt  # Add the system prompt to the data
+                "System Prompt": system_prompt,
+                "Relevant Parts": relevant_parts,  # Add the number of relevant parts
+                "Include Quotes": include_quotes  # Add the include quotes checkbox state
             }
             
             with open(paths_file, 'w', encoding='utf-8') as f:
