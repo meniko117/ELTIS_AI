@@ -2,34 +2,40 @@ import os
 from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, StorageContext, load_index_from_storage
 from llama_index.core.node_parser import SimpleNodeParser
 import openai
+import json
 
 
 # Set your OpenAI API key
 openai.api_key = open_api_key
 
+
+# Load configuration from paths.json with explicit encoding to handle Unicode characters
+with open(r"C:\Users\134\paths.json", 'r', encoding='utf-8') as config_file:
+    config = json.load(config_file)
+
 # Path to your document(s)
-DOCUMENTS_DIR = r"C:\Users\134\Documents\for_Llama_index"
+DOCUMENTS_DIR = config["Markdown Folder"]
 
 # Path to save the index
-PERSIST_DIR = "./my_test_storage"
+PERSIST_DIR = config["Output Folder"]
 
+# Assign chunk size and overlap from the configuration
+chunk_size = config["Chunk Size"]
+chunk_overlap = config["Text Overlap"]
+similarity_top_k = config["Relevant Parts"]
 
 # Function to create index for each markdown file
 def create_index_for_file(file_path, persist_dir):
     # Load the document from the file
-    
     reader = SimpleDirectoryReader(
         input_files=[file_path]
     )    
     docs = reader.load_data()
     
-    
-    
-    
     # Create a parser with custom chunk size and overlap
     parser = SimpleNodeParser.from_defaults(
-        chunk_size=1024,  # Adjust this value as needed
-        chunk_overlap=200  # Adjust this value as needed
+        chunk_size=chunk_size,  # Use the value from the configuration
+        chunk_overlap=chunk_overlap  # Use the value from the configuration
     )
      
     # Parse the document into nodes
@@ -61,7 +67,7 @@ def load_and_query_index(file_name, question):
     index = load_index_from_storage(storage_context)
 
     query_engine = index.as_query_engine(
-        similarity_top_k=3,  # Get top 3 most relevant results
+        similarity_top_k=similarity_top_k,  # Use the value from the configuration
         response_mode="no_text"  # This will return the raw Node objects
     )
     
