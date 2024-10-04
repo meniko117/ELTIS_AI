@@ -679,9 +679,54 @@ class IndexApp(QWidget):
         self.include_quotes_checkbox.setFont(QFont("Arial", 12))
         include_quotes_layout.addWidget(self.include_quotes_checkbox)
         additional_fields_layout.addLayout(include_quotes_layout)
+        
+        # Create Index Button (Moved to Settings Page)
+        self.create_button = QPushButton("Сохранить конфигурационный файл")
+        self.create_button.setFixedSize(300, 60)  # Set width to 200 and height to 60
+        self.create_button.setFont(QFont("Arial", 12))
+        self.create_button.setStyleSheet("""
+            QPushButton {
+                background-color: #27ae60;
+                color: white;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #2ecc71;
+            }
+        """)
+        self.create_button.clicked.connect(self.run_script)
+        additional_fields_layout.addWidget(self.create_button)
+        
+        additional_fields_layout.addSpacing(60)  
 
-        # Set size policy to make the layout expand vertically
-        additional_fields_group.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        # System Prompt Field
+        system_prompt_layout = QVBoxLayout()
+        system_prompt_desc_icon_layout = QHBoxLayout()
+        system_prompt_description = QLabel("<b>Системный промпт</b>")
+        system_prompt_description.setFont(QFont("Arial", 12))
+        system_prompt_desc_icon_layout.addWidget(system_prompt_description)
+        
+        # Add QIcon for system_prompt_description
+        system_prompt_icon = QLabel()
+        system_prompt_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
+        system_prompt_icon.setToolTip("Введите системный промпт для настройки модели.")
+        system_prompt_desc_icon_layout.addWidget(system_prompt_icon)
+        system_prompt_desc_icon_layout.addStretch()
+        system_prompt_layout.addLayout(system_prompt_desc_icon_layout)
+
+        self.system_prompt_field = QTextEdit()  # Initialize the QTextEdit field
+        self.system_prompt_field.setPlaceholderText("Системный промпт")
+        self.system_prompt_field.setFont(QFont("Arial", 12))
+        self.system_prompt_field.setFixedWidth(600)  # Set width to match screen width
+        self.system_prompt_field.setFixedHeight(200)  # Set width to match screen width
+        system_prompt_layout.addWidget(self.system_prompt_field)
+
+        # Set the system prompt field value from paths.json
+        self.system_prompt_field.setText(paths.get('System Prompt', ''))  # Set default to empty string if not found
+
+        # Add the system prompt layout to the input_output_markdown_layout
+        top_layout.addLayout(system_prompt_layout)
 
         # Add button for converting documents to markdown format
         convert_button_layout = QHBoxLayout()
@@ -734,59 +779,6 @@ class IndexApp(QWidget):
         """)
         save_button_layout.addWidget(self.save_button)
         top_layout.addLayout(save_button_layout)
-
-        # Add vertical spacing (3 times the original)
-        top_layout.addSpacing(60)  # Assuming original spacing was 20, now it's 60
-
-        # System Prompt Field
-        system_prompt_layout = QVBoxLayout()
-        system_prompt_desc_icon_layout = QHBoxLayout()
-        system_prompt_description = QLabel("<b>Системный промпт</b>")
-        system_prompt_description.setFont(QFont("Arial", 12))
-        system_prompt_desc_icon_layout.addWidget(system_prompt_description)
-        
-        # Add QIcon for system_prompt_description
-        system_prompt_icon = QLabel()
-        system_prompt_icon.setPixmap(QIcon.fromTheme("help-about").pixmap(QSize(16, 16)))
-        system_prompt_icon.setToolTip("Введите системный промпт для настройки модели.")
-        system_prompt_desc_icon_layout.addWidget(system_prompt_icon)
-        system_prompt_desc_icon_layout.addStretch()
-        system_prompt_layout.addLayout(system_prompt_desc_icon_layout)
-
-        self.system_prompt_field = QTextEdit()  # Initialize the QTextEdit field
-        self.system_prompt_field.setPlaceholderText("Системный промпт")
-        self.system_prompt_field.setFont(QFont("Arial", 12))
-        self.system_prompt_field.setFixedWidth(600)  # Set width to match screen width
-        self.system_prompt_field.setFixedHeight(200)  # Set width to match screen width
-        system_prompt_layout.addWidget(self.system_prompt_field)
-
-        # Set the system prompt field value from paths.json
-        self.system_prompt_field.setText(paths.get('System Prompt', ''))  # Set default to empty string if not found
-
-        # Add the system prompt layout to the input_output_markdown_layout
-        top_layout.addLayout(system_prompt_layout)
-
-        
-        # Create Index Button (Moved to Settings Page)
-        self.create_button = QPushButton("Сохранить конфигурационный файл")
-        self.create_button.setFixedSize(300, 60)  # Set width to 200 and height to 60
-        self.create_button.setFont(QFont("Arial", 12))
-        self.create_button.setStyleSheet("""
-            QPushButton {
-                background-color: #27ae60;
-                color: white;
-                border: none;
-                border-radius: 5px;
-            }
-            QPushButton:hover {
-                background-color: #2ecc71;
-            }
-        """)
-        self.create_button.clicked.connect(self.run_script)
-        top_layout.addWidget(self.create_button)
-
-        # Add vertical spacing (3 times the original)
-        top_layout.addSpacing(60)  # Assuming original spacing was 20, now it's 60
 
         settings_layout.addLayout(top_layout)
 
