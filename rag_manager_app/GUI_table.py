@@ -683,9 +683,43 @@ class IndexApp(QWidget):
         # Set size policy to make the layout expand vertically
         additional_fields_group.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        # Add button above the System Prompt Field
+        # Add button for converting documents to markdown format
+        convert_button_layout = QHBoxLayout()
+        convert_button_layout.setAlignment(Qt.AlignLeft)
+        convert_icon = QLabel("1")
+        convert_icon.setFont(QFont("Arial", 12, QFont.Bold))
+        convert_icon.setStyleSheet("color: white; background-color: #2980b9; padding: 5px; border-radius: 10px;")
+        convert_icon.setFixedSize(40, 40)  # Set both width and height to 40
+        convert_button_layout.addWidget(convert_icon)
+        
+        self.convert_button = QPushButton("Конвертировать документы в markdown формат")
+        self.convert_button.setFixedSize(370, 40)  # Adjusted width to accommodate the icon
+        self.convert_button.setFont(QFont("Arial", 12))
+        self.convert_button.setStyleSheet("""
+            QPushButton {
+                background-color: #2980b9;
+                color: white;
+                border: none;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #3498db;
+            }
+        """)
+        convert_button_layout.addWidget(self.convert_button)
+        top_layout.addLayout(convert_button_layout)
+
+        # Add button for saving vector representations of documents
+        save_button_layout = QHBoxLayout()
+        save_button_layout.setAlignment(Qt.AlignLeft)
+        save_icon = QLabel("2")
+        save_icon.setFont(QFont("Arial", 12, QFont.Bold))
+        save_icon.setStyleSheet("color: white; background-color: #2980b9; padding: 5px; border-radius: 10px;")
+        save_icon.setFixedSize(40, 40)  # Set both width and height to 40
+        save_button_layout.addWidget(save_icon)
+        
         self.save_button = QPushButton("Создать векторные представления документов")
-        self.save_button.setFixedSize(400, 40)  # Set width to 300 and height to 40
+        self.save_button.setFixedSize(370, 40)  # Adjusted width to accommodate the icon
         self.save_button.setFont(QFont("Arial", 12))
         self.save_button.setStyleSheet("""
             QPushButton {
@@ -698,7 +732,8 @@ class IndexApp(QWidget):
                 background-color: #3498db;
             }
         """)
-        top_layout.addWidget(self.save_button)
+        save_button_layout.addWidget(self.save_button)
+        top_layout.addLayout(save_button_layout)
 
         # Add vertical spacing (3 times the original)
         top_layout.addSpacing(60)  # Assuming original spacing was 20, now it's 60
