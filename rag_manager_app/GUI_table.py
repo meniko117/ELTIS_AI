@@ -177,6 +177,10 @@ class IndexApp(QWidget):
         self.setGeometry(100, 100, 1200, 800)
         self.setStyleSheet("background-color: #ecf0f1;")
         
+        # Use a QVBoxLayout for the main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        
         # Add this line to create the variable
         self.source_files_path = ""
         self.db_index_path = ""
@@ -187,9 +191,6 @@ class IndexApp(QWidget):
         self.left_text = ""
         self.right_text = ""
         self.config_field_value = ""  # New variable for config field
-
-        main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0)
 
         # Menu Bar
         self.menu_bar = QMenuBar()
@@ -214,6 +215,8 @@ class IndexApp(QWidget):
 
         # Content Layout
         content_layout = QHBoxLayout()
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(0)
 
         # Sidebar
         self.sidebar = Sidebar()
@@ -222,6 +225,9 @@ class IndexApp(QWidget):
         # Stacked Widget to switch between different pages
         self.stacked_widget = QStackedWidget()
         content_layout.addWidget(self.stacked_widget, 1)  # Make it expandable
+
+        # Add content layout to main layout
+        main_layout.addLayout(content_layout)
 
         # Home Page
         self.home_page = QWidget()
@@ -319,7 +325,7 @@ class IndexApp(QWidget):
         top_layout.addWidget(self.label)
         
         # Add vertical spacing (3 times the original)
-        top_layout.addSpacing(60)  # Assuming original spacing was 20, now it's 60
+        #top_layout.addSpacing(60)  # Assuming original spacing was 20, now it's 60
 
         # Create a horizontal layout for input, output, and markdown fields
         input_output_markdown_layout = QHBoxLayout()
@@ -466,8 +472,7 @@ class IndexApp(QWidget):
         # Extra Field
         extra_layout = QVBoxLayout()
         extra_desc_icon_layout = QHBoxLayout()
-        extra_desc_icon_layout.addWidget(extra_description)
-        extra_desc_icon_layout.addWidget(extra_icon)
+        extra_desc_icon_layout.addWidget(extra_description)       
         extra_desc_icon_layout.addStretch()
         extra_layout.addLayout(extra_desc_icon_layout)
 
@@ -517,7 +522,7 @@ class IndexApp(QWidget):
         top_layout.addLayout(input_output_markdown_layout)
         
         # Add vertical spacing (3 times the original)
-        top_layout.addSpacing(60)  # Assuming original spacing was 20, now it's 60
+        #top_layout.addSpacing(60)  # Assuming original spacing was 20, now it's 60
 
         # Create a new layout for the additional fields
         additional_fields_layout = QVBoxLayout()
@@ -698,7 +703,7 @@ class IndexApp(QWidget):
         self.create_button.clicked.connect(self.run_script)
         additional_fields_layout.addWidget(self.create_button)
         
-        additional_fields_layout.addSpacing(60)  
+        #additional_fields_layout.addSpacing(60)  
 
         # System Prompt Field
         system_prompt_layout = QVBoxLayout()
@@ -737,7 +742,7 @@ class IndexApp(QWidget):
         convert_icon.setFixedSize(40, 40)  # Set both width and height to 40
         convert_button_layout.addWidget(convert_icon)
         
-        self.convert_button = QPushButton("Конвертировать документы в markdown формат")
+        self.convert_button = QPushButton("Конвертировать документы в формат Markdown")
         self.convert_button.setFixedSize(370, 40)  # Adjusted width to accommodate the icon
         self.convert_button.setFont(QFont("Arial", 12))
         self.convert_button.setStyleSheet("""
@@ -909,7 +914,7 @@ class IndexApp(QWidget):
         self.see_table_page.setLayout(see_table_layout)
         self.stacked_widget.addWidget(self.see_table_page)
 
-        main_layout.addLayout(content_layout)
+        # Set the main layout
         self.setLayout(main_layout)
 
         # Connect sidebar buttons to respective pages
