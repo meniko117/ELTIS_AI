@@ -33,6 +33,8 @@ storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR)
 
 index = load_index_from_storage(storage_context)
 
+
+
 def query_index(index, question):
     query_engine = index.as_query_engine(
         similarity_top_k=3,  # Get top 3 most relevant results
@@ -41,10 +43,16 @@ def query_index(index, question):
     
     response = query_engine.query(question)
     
+    # Initialize an empty string to store concatenated results
+    concatenated_results = ""
+    
     for i, node in enumerate(response.source_nodes, 1):
-        print(f"Answer {i}:")
-        print(node.node.text)  # This will print the full text of each node
-        print("\n")
+        concatenated_results += f"Answer {i}:\n"
+        concatenated_results += f"Text: {node.node.text}\n"
+        concatenated_results += f"File name: {node.node.metadata.get('file_name', 'N/A')}\n"
+        concatenated_results += f"Score: {node.score}\n\n"
+    
+    return concatenated_results
     
 # Your question
 question = "Отрицательные показатели"
