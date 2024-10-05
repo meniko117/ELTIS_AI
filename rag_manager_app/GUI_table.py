@@ -5,9 +5,11 @@ import json
 from PySide6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout,
     QFileDialog, QMessageBox, QHBoxLayout, QFrame, QStackedWidget,
-    QComboBox, QMenuBar, QMenu, QTableWidget, QTableWidgetItem, QHeaderView, QTextEdit, QGroupBox, QSlider, QGridLayout, QCheckBox, QLayout
+    QComboBox, QMenuBar, QMenu, QTableWidget, QTableWidgetItem, QHeaderView, QTextEdit, QGroupBox, QSlider, QGridLayout, 
+    QCheckBox, QLayout, QProgressBar
 )
-from PySide6.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve
+from PySide6.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve, QProcess
+#from PyQt5.QtCore import 
 from PySide6.QtGui import QIcon, QColor, QFont, QAction, QPixmap
 from PySide6.QtWidgets import QSizePolicy
 import datetime
@@ -756,8 +758,29 @@ class IndexApp(QWidget):
                 background-color: #3498db;
             }
         """)
+        self.convert_button.clicked.connect(self.run_conversion_script)  # Connect button to the script
         convert_button_layout.addWidget(self.convert_button)
         top_layout.addLayout(convert_button_layout)
+
+        # Add progress bar
+        self.progress_bar = QProgressBar(self)
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+        self.progress_bar.setTextVisible(True)
+        self.progress_bar.setFixedSize(410, 20)  # Adjust size as needed
+        self.progress_bar.setStyleSheet("""
+            QProgressBar {
+                border: 2px solid grey;
+                border-radius: 5px;
+                text-align: center;
+            }
+            QProgressBar::chunk {
+                background-color: #2980b9;
+                width: 10px;
+            }
+        """)
+        self.progress_bar.hide()  # Initially hide the progress bar
+        top_layout.addWidget(self.progress_bar)
 
         # Add button for saving vector representations of documents
         save_button_layout = QHBoxLayout()
@@ -922,6 +945,48 @@ class IndexApp(QWidget):
         self.sidebar.btn_settings.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.settings_page))
         self.sidebar.btn_about.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.about_page))
         self.sidebar.btn_see_table.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.see_table_page))
+    
+    def run_conversion_script(self):
+        self.progress_bar.show()  # Show the progress bar
+        self.progress_bar.setValue(0)  # Reset progress bar value
+        self.convert_button.setEnabled(False)  # Disable the button during conversion
+
+        try:
+            # Use QProcess to run the script asynchronously
+            self.process = QProcess()
+            self.process.readyReadStandardOutput.connect(self.handle_stdout)
+            self.process.readyReadStandardError.connect(self.handle_stderr)
+            self.process.finished.connect(self.process_finished)
+
+            # Start the process
+            self.process.start(sys.executable, [r"C:\Users\134\Documents\Python Scripts\llama_parse_module.py"])
+
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Неожиданная ошибка: {str(e)}")
+            self.progress_bar.hide()
+            self.convert_button.setEnabled(True)
+
+    def handle_stdout(self):
+        data = self.process.readAllStandardOutput()
+        stdout = bytes(data).decode("utf8")
+        # Update progress bar based on stdout (you may need to parse the output)
+        # For example, if your script prints progress percentage:
+        try:
+            progress = int(stdout.strip())
+            self.progress_bar.setValue(progress)
+        except ValueError:
+            pass  # Not a progress update
+
+    def handle_stderr(self):
+        data = self.process.readAllStandardError()
+        stderr = bytes(data).decode("utf8")
+        print(f"Error: {stderr}")
+
+    def process_finished(self):
+        self.progress_bar.setValue(100)
+        self.convert_button.setEnabled(True)
+        QMessageBox.information(self, "Успех", "Конвертация завершена успешно!")
+        self.progress_bar.hide()
 
     def update_left_text(self):
         self.left_text = self.left_field.toPlainText()
