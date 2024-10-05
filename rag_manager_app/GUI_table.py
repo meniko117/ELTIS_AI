@@ -821,12 +821,17 @@ class IndexApp(QWidget):
             }
         """)
         save_button_layout.addWidget(self.save_button)
+        self.save_button.clicked.connect(self.run_save_script)
         top_layout.addLayout(save_button_layout)
 
         settings_layout.addLayout(top_layout)
 
         self.settings_page.setLayout(settings_layout)
         self.stacked_widget.addWidget(self.settings_page)
+
+  
+
+
 
         # About Page
         self.about_page = QWidget()
@@ -960,6 +965,65 @@ class IndexApp(QWidget):
         self.sidebar.btn_settings.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.settings_page))
         self.sidebar.btn_about.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.about_page))
         self.sidebar.btn_see_table.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.see_table_page))
+       
+    def run_save_script(self):
+        self.progress_dialog = ProgressDialog(self)
+        self.progress_dialog.show()
+      
+        self.save_button.setEnabled(False)  # Disable the button during processing
+      
+        # Simulate progress
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_progress)
+        self.progress = 0
+        self.timer.start(150)  # Update every 150ms
+      
+        try:
+            # Use QProcess to run the script asynchronously
+            self.process = QProcess()
+            self.process.readyReadStandardOutput.connect(self.handle_stdout)
+            self.process.readyReadStandardError.connect(self.handle_stderr)
+            self.process.finished.connect(self.save_process_finished)
+      
+            # Start the process
+            self.process.start(sys.executable, [r"C:\Users\134\Documents\Python Scripts\llama_index_multiple_files.py"])
+      
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Неожиданная ошибка: {str(e)}")
+            self.progress_dialog.close()
+            self.save_button.setEnabled(True)
+      
+    def update_progress(self):
+        if self.progress < 90:
+            self.progress += 0.9
+        elif self.progress == 90:
+            # Hold at 90% until process finishes
+            pass
+        self.progress_dialog.set_progress(int(self.progress))
+      
+        # Stop the timer after 15 seconds (when progress reaches 90%)
+        if self.progress >= 90:
+            self.timer.stop()
+      
+    def save_process_finished(self):
+        self.timer.stop()
+        self.progress = 100
+        self.progress_dialog.set_progress(self.progress)
+        self.progress_dialog.status_label.setText("Создание векторных представлений завершено!")
+        self.save_button.setEnabled(True)
+        QTimer.singleShot(1000, self.progress_dialog.close)  # Close after 1 second
+        QMessageBox.information(self, "Успех", "Создание векторных представлений завершено успешно!")
+      
+    def handle_stdout(self):
+        data = self.process.readAllStandardOutput()
+        stdout = bytes(data).decode("utf8")
+        print(f"Output: {stdout}")
+      
+    def handle_stderr(self):
+        data = self.process.readAllStandardError()
+        stderr = bytes(data).decode("utf8")
+        print(f"Error: {stderr}")        
+        
     
     def run_conversion_script(self):
         self.progress_dialog = ProgressDialog(self)
