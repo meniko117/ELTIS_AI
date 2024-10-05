@@ -8,8 +8,7 @@ from PySide6.QtWidgets import (
     QComboBox, QMenuBar, QMenu, QTableWidget, QTableWidgetItem, QHeaderView, QTextEdit, QGroupBox, QSlider, QGridLayout, 
     QCheckBox, QLayout, QProgressBar
 )
-from PySide6.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve, QProcess
-#from PyQt5.QtCore import 
+from PySide6.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve, QProcess, QTimer
 from PySide6.QtGui import QIcon, QColor, QFont, QAction, QPixmap
 from PySide6.QtWidgets import QSizePolicy
 import datetime
@@ -144,7 +143,23 @@ def button_style():
             background-color: #2c3e50;
         }
     """
+class ProgressDialog(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent, Qt.Window)
+        self.setWindowTitle("Конвертация")
+        self.setFixedSize(300, 100)
+        
+        layout = QVBoxLayout(self)
+        
+        self.progress_bar = QProgressBar(self)
+        self.progress_bar.setRange(0, 100)
+        layout.addWidget(self.progress_bar)
+        
+        self.status_label = QLabel("Конвертация в процессе...", self)
+        layout.addWidget(self.status_label)
 
+    def set_progress(self, value):
+        self.progress_bar.setValue(value)
 
 class Header(QFrame):
     def __init__(self, parent=None):
@@ -947,9 +962,16 @@ class IndexApp(QWidget):
         self.sidebar.btn_see_table.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.see_table_page))
     
     def run_conversion_script(self):
-        self.progress_bar.show()  # Show the progress bar
-        self.progress_bar.setValue(0)  # Reset progress bar value
+        self.progress_dialog = ProgressDialog(self)
+        self.progress_dialog.show()
+
         self.convert_button.setEnabled(False)  # Disable the button during conversion
+
+        # Simulate progress
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_progress)
+        self.progress = 0
+        self.timer.start(50)  # Update every 50ms
 
         try:
             # Use QProcess to run the script asynchronously
@@ -963,30 +985,39 @@ class IndexApp(QWidget):
 
         except Exception as e:
             QMessageBox.critical(self, "Ошибка", f"Неожиданная ошибка: {str(e)}")
-            self.progress_bar.hide()
+            self.progress_dialog.close()
             self.convert_button.setEnabled(True)
+
+    def update_progress(self):
+        if self.progress < 90:
+            self.progress += 1
+        elif self.progress == 90:
+            # Hold at 90% until process finishes
+            pass
+        self.progress_dialog.set_progress(self.progress)
+
+        # Stop the timer after 5 seconds (when progress reaches 90%)
+        if self.progress == 90:
+            self.timer.stop()
+
+    def process_finished(self):
+        self.timer.stop()
+        self.progress = 100
+        self.progress_dialog.set_progress(self.progress)
+        self.progress_dialog.status_label.setText("Конвертация завершена!")
+        self.convert_button.setEnabled(True)
+        QTimer.singleShot(1000, self.progress_dialog.close)  # Close after 1 second
+        QMessageBox.information(self, "Успех", "Конвертация завершена успешно!")
 
     def handle_stdout(self):
         data = self.process.readAllStandardOutput()
         stdout = bytes(data).decode("utf8")
-        # Update progress bar based on stdout (you may need to parse the output)
-        # For example, if your script prints progress percentage:
-        try:
-            progress = int(stdout.strip())
-            self.progress_bar.setValue(progress)
-        except ValueError:
-            pass  # Not a progress update
+        print(f"Output: {stdout}")
 
     def handle_stderr(self):
         data = self.process.readAllStandardError()
         stderr = bytes(data).decode("utf8")
-        print(f"Error: {stderr}")
-
-    def process_finished(self):
-        self.progress_bar.setValue(100)
-        self.convert_button.setEnabled(True)
-        QMessageBox.information(self, "Успех", "Конвертация завершена успешно!")
-        self.progress_bar.hide()
+        print(f"Error: {stderr}")    
 
     def update_left_text(self):
         self.left_text = self.left_field.toPlainText()
