@@ -971,7 +971,7 @@ class IndexApp(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_progress)
         self.progress = 0
-        self.timer.start(50)  # Update every 50ms
+        self.timer.start(150)  # Update every 50ms
 
         try:
             # Use QProcess to run the script asynchronously
@@ -990,14 +990,14 @@ class IndexApp(QWidget):
 
     def update_progress(self):
         if self.progress < 90:
-            self.progress += 1
+            self.progress += 0.9
         elif self.progress == 90:
             # Hold at 90% until process finishes
             pass
         self.progress_dialog.set_progress(self.progress)
 
-        # Stop the timer after 5 seconds (when progress reaches 90%)
-        if self.progress == 90:
+        # Stop the timer after 15 seconds (when progress reaches 90%)
+        if self.progress >= 90:
             self.timer.stop()
 
     def process_finished(self):
