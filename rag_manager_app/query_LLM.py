@@ -7,26 +7,43 @@ from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, StorageCon
 import openai
 import re  # Import regex for handling special characters
 import pandas as pd
+import json
 
 ####################################################
 # get relevant info from Index
 ####################################################
 
 # Set your OpenAI API key
-openai.api_key = open_ai_key
+openai.api_key = openai.api_key
 
-# Path to save the index
-PERSIST_DIR = "./my_test_storage"
+def load_paths_config():
+    try:
+        # Try to get the directory of the current file (works in scripts)
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+    except NameError:
+        # If __file__ is not defined (e.g., in Jupyter), use the current working directory
+        current_dir = os.getcwd()
+    
+    paths_file = os.path.join(current_dir, 'paths.json')
+    try:
+        with open(paths_file, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Error loading paths.json: {e}")
+        return {}
 
-storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR)
+# Use the function
+paths_config = load_paths_config()
 
-index = load_index_from_storage(storage_context)
+
+# Replace hardcoded values:
+PERSIST_DIR = paths_config.get('Output Folder', "./my_test_storage")
 
 
 
 def query_index(question):
-    # Read the CSV file
-    df = pd.read_excel(r'C:/Users/134/Documents/ЭЛТИС/Техподдержка/text_search.xlsx')
+    # Read the XLSX file
+    df = pd.read_excel(paths_config.get('Extra Path', '') + '/text_search.xlsx')
     
     # Initialize an empty set to hold unique index names to query
     index_names = set()
@@ -68,8 +85,8 @@ def query_index(question):
         index = load_index_from_storage(storage_context)
         
         query_engine = index.as_query_engine(
-            similarity_top_k=3,  # Get top 3 most relevant results
-            response_mode="no_text"  # This will return the raw Node objects
+            similarity_top_k=int(paths_config.get('Relevant Parts', 3)),
+            response_mode="no_text"
         )
         
         response = query_engine.query(question)
@@ -85,16 +102,16 @@ def query_index(question):
 
 
 
-
 ####################################################
 # query LLM
 ####################################################
 client = anthropic.Anthropic(
-    api_key=anthropic_key_key,
-)
+    api_key=anthropic.api_key
+
 
 def send_message(text_to_send):
     message = client.messages.create(
+        #TODO! implement logic of selecting a model
         model="claude-3-5-sonnet-20240620",
         max_tokens=4096,
         messages=[
@@ -138,15 +155,12 @@ if __name__ == "__main__":
     
     # query from the user
     text_to_send_tech_support = sys.stdin.read().strip()
+    #text_to_send_tech_support = "В чем назначение АРМ?"
     #get info from Index
     relevant_info_from_documentation = query_index(text_to_send_tech_support)
     
-    RAG_user_query = f''' Imagine you are a technical support employee.
-    You are receiving a customer question and you are also provided with information from tehcnical documentation. 
-    This information is separated by Answer 1, Answer 2, Answer 3 lables with decreasing relevance.
-    Please, reply to the customer in Russian.
+    RAG_user_query = f'''{paths_config.get('System Prompt', '')}
     Question: {text_to_send_tech_support}
-    
     Information from technical documentation: {relevant_info_from_documentation}'''
 
     claude_reply_tech_support = format_claude_reply(send_message(RAG_user_query))

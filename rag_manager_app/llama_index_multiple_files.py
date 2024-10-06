@@ -4,13 +4,17 @@ from llama_index.core.node_parser import SimpleNodeParser
 import openai
 import json
 
+# https://platform.openai.com/settings/organization/billing/overview
+# parsing up to 1000 pages per day for free
+# https://cloud.llamaindex.ai/project/a789a17a-5e8b-45d7-9635-c8f239c2edbb/extraction
+
 
 # Set your OpenAI API key
-openai.api_key = open_api_key
+openai.api_key = openai_api_key
 
 
 # Load configuration from paths.json with explicit encoding to handle Unicode characters
-with open(r"C:\Users\134\paths.json", 'r', encoding='utf-8') as config_file:
+with open(r"paths.json", 'r', encoding='utf-8') as config_file:
     config = json.load(config_file)
 
 # Path to your document(s)
@@ -60,33 +64,33 @@ for file_name in os.listdir(DOCUMENTS_DIR):
 
 #########################################
 
-# Function to load the index for a specific file and query it
-def load_and_query_index(file_name, question):
-    index_dir = os.path.join(PERSIST_DIR, file_name)
-    storage_context = StorageContext.from_defaults(persist_dir=index_dir)
-    index = load_index_from_storage(storage_context)
+# # Function to load the index for a specific file and query it
+# def load_and_query_index(file_name, question):
+#     index_dir = os.path.join(PERSIST_DIR, file_name)
+#     storage_context = StorageContext.from_defaults(persist_dir=index_dir)
+#     index = load_index_from_storage(storage_context)
 
-    query_engine = index.as_query_engine(
-        similarity_top_k=similarity_top_k,  # Use the value from the configuration
-        response_mode="no_text"  # This will return the raw Node objects
-    )
+#     query_engine = index.as_query_engine(
+#         similarity_top_k=similarity_top_k,  # Use the value from the configuration
+#         response_mode="no_text"  # This will return the raw Node objects
+#     )
     
-    response = query_engine.query(question)
+#     response = query_engine.query(question)
     
-    # Initialize an empty string to store concatenated results
-    concatenated_results = ""
+#     # Initialize an empty string to store concatenated results
+#     concatenated_results = ""
     
-    # Iterate over the response nodes and concatenate the results
-    for i, node in enumerate(response.source_nodes, 1):
-        # Concatenate the answer number and the text from the node
-        concatenated_results += f"Answer {i}:\n{node.node.text}\n\n"
+#     # Iterate over the response nodes and concatenate the results
+#     for i, node in enumerate(response.source_nodes, 1):
+#         # Concatenate the answer number and the text from the node
+#         concatenated_results += f"Answer {i}:\n{node.node.text}\n\n"
     
-    # Optionally, you can return or print the concatenated result
-    print(concatenated_results)
-    return concatenated_results
+#     # Optionally, you can return or print the concatenated result
+#     print(concatenated_results)
+#     return concatenated_results
 
-# Example of querying a specific file
-question = "Что содержит заголовок таблицы?"
-file_name = "rukovodstvo_operatora_apm_eltis_markdown.md"  # Replace with your actual file name
+# # Example of querying a specific file
+# question = "Что содержит заголовок таблицы?"
+# file_name = "rukovodstvo_operatora_apm_eltis_markdown.md"  # Replace with your actual file name
 
-load_and_query_index(file_name, question)
+# load_and_query_index(file_name, question)

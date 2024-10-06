@@ -1045,7 +1045,7 @@ class IndexApp(QWidget):
             self.process.finished.connect(self.process_finished)
 
             # Start the process
-            self.process.start(sys.executable, [r"C:\Users\134\Documents\Python Scripts\llama_parse_module.py"])
+            self.process.start(sys.executable, [r"llama_parse_module.py"])
 
         except Exception as e:
             QMessageBox.critical(self, "Ошибка", f"Неожиданная ошибка: {str(e)}")
@@ -1169,9 +1169,9 @@ class IndexApp(QWidget):
         system_prompt = self.system_prompt_field.toPlainText()  # Get the system prompt text
         relevant_parts = self.relevant_parts_dropdown.currentText()  # Get the selected number of relevant parts
         include_quotes = self.include_quotes_checkbox.isChecked()  # Get the state of the checkbox
-
+    
         try:
-            # Define the path for paths.json in the current working directory
+            # Define the path for paths.json relative to the main script
             current_dir = os.getcwd()
             paths_file = os.path.join(current_dir, 'paths.json')
             
@@ -1186,13 +1186,13 @@ class IndexApp(QWidget):
                 "Model": model_dropdown,
                 "Config File Path": config_folder,
                 "System Prompt": system_prompt,
-                "Relevant Parts": relevant_parts,  # Add the number of relevant parts
-                "Include Quotes": include_quotes  # Add the include quotes checkbox state
+                "Relevant Parts": relevant_parts,
+                "Include Quotes": include_quotes
             }
             
             with open(paths_file, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)
-
+    
             if os.path.exists(paths_file):
                 file_size = os.path.getsize(paths_file)
                 QMessageBox.information(
@@ -1206,23 +1206,11 @@ class IndexApp(QWidget):
                     "File Not Found", 
                     f"paths.json was not found at {paths_file}"
                 )
-
-            # Run the external python script with the folder paths as arguments
-            subprocess.run([
-                'python', 
-                r"C:\Users\134\Documents\Python Scripts\test_script_for_gui_button.py",
-                '--input_folder', input_folder,
-                '--output_folder', output_folder,
-                '--markdown_folder', markdown_folder,
-                '--extra_path', extra_path,
-                '--config_path', config_folder  # Pass the config path
-            ], check=True)
+    
             QMessageBox.information(self, "Success", "Index creation completed.")
         except IOError as e:
             error_msg = f"Failed to save path: {str(e)}\n\nTraceback:\n{traceback.format_exc()}"
             QMessageBox.critical(self, "Error", error_msg)
-        except subprocess.CalledProcessError as e:
-            QMessageBox.critical(self, "Error", f"An error occurred while running the script: {str(e)}")
         except Exception as e:
             error_msg = f"An unexpected error occurred: {str(e)}\n\nTraceback:\n{traceback.format_exc()}"
             QMessageBox.critical(self, "Error", error_msg)
@@ -1286,31 +1274,41 @@ class IndexApp(QWidget):
         try:
             # First, save the content
             self.save_left_field_content()
-
+    
             # Then, query the LLM
             text_to_send_tech_support = self.left_field.toPlainText()
             
+            # # Get the directory of the current executable
+            # current_dir = os.path.dirname(sys.executable)
+            
+            # # Construct the path to query_LLM.py
+            # query_llm_path = os.path.join(current_dir, 'query_LLM.py')
+            
+            current_dir = os.getcwd()
+            query_llm_path = os.path.join(current_dir, 'query_LLM.py')
+            
             # Run the query_LLM.py script
             result = subprocess.run(
-                ['python', r'C:\Users\134\Documents\Python Scripts\query_LLM.py'],
+                [sys.executable, query_llm_path],
                 input=text_to_send_tech_support,
                 text=True,
                 capture_output=True,
                 check=True
             )
-
+    
             # Get the output from the script
             claude_reply_tech_support = result.stdout.strip()
-
+    
             # Update the right field with the response
             self.right_field.setPlainText(claude_reply_tech_support)
-
+    
             QMessageBox.information(self, "Успех", "Запрос к LLM выполнен успешно")
             
-            # save history pf questins and answers
+            # save history of questions and answers
             self.save_left_and_right_field_content()
         except subprocess.CalledProcessError as e:
-            QMessageBox.critical(self, "Ошибка", f"Ошибка при выполнении скрипта LLM: {e}")
+            error_message = f"Ошибка при выполнении скрипта LLM: {e}\n\nStderr: {e.stderr}"
+            QMessageBox.critical(self, "Ошибка", error_message)
         except Exception as e:
             QMessageBox.critical(self, "Ошибка", f"Неожиданная ошибка: {str(e)}")
 
